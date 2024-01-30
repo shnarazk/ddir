@@ -1,22 +1,13 @@
+use {
+    ddir::dd::{DecisionDiagramTrait, Node},
+    std::io,
+};
+
 fn main() {
-    println!(
-        "digraph regexp {{ 
-  fontname=\"Helvetica,Arial,sans-serif\"
-  node [fontname=\"Helvetica,Arial,sans-serif\"]
-  edge [fontname=\"Helvetica,Arial,sans-serif\",color=blue]"
-    );
-    for (i, label) in [(0, "1"), (1, "2")] {
-        println!("  n{i} [label=\"{label}\"];");
-    }
-    // n0 [label="regexp"];
-    // n1 [label="bytes"];
-    // n2 [label="io"];
-    // n3 [label="なああ"];
-    // n5 [label="strconv"];
-    // n6 [label="strings"];
-    // n7 [label="sync"];
-    // n8 [label="unicode"];
-    // n13 [label="math"];
-    // n15 [label="unsafe"];
-    println!("}}");
+    let stdout = io::stdout();
+    let f = Node::new_constant(false);
+    let n = Node::new_var(2, f.clone(), f.clone());
+    let k = Node::new_var(1, n.clone(), f.clone());
+
+    k.write_as_graphvis(stdout).expect("");
 }

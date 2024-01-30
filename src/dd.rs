@@ -1,4 +1,9 @@
-use std::{boxed::Box, collections::HashSet, rc::Rc};
+use std::{
+    boxed::Box,
+    collections::{HashMap, HashSet},
+    io,
+    rc::Rc,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DDT {
@@ -23,6 +28,7 @@ pub trait DecisionDiagramTrait {
     fn is_constant(&self) -> Option<bool>;
     fn all_nodes<'a>(&'a self) -> HashSet<&Node>;
     fn len(&self) -> usize;
+    fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()>;
 }
 
 impl DecisionDiagramTrait for Node {
@@ -88,5 +94,65 @@ impl DecisionDiagramTrait for Node {
         }
         traverse(self, &mut map);
         map
+    }
+    fn write_as_graphvis(&self, mut sink: impl io::Write) -> io::Result<()> {
+        sink.write(
+            b"digraph regexp {{
+  fontname=\"Helvetica,Arial,sans-serif\"
+  node [fontname=\"Helvetica,Arial,sans-serif\"]
+  edge [fontname=\"Helvetica,Arial,sans-serif\",color=blue]\n",
+        )?;
+        let mut index: HashMap<&Node, usize> = HashMap::new();
+        for (i, n) in self.all_nodes().iter().enumerate() {
+            if let Vertex::Var { .. } = ****n {
+                index.insert(*n, i + 2);
+            }
+        }
+        // nodes
+        sink.write(b"  0[label=\"false\"];\n")?;
+        sink.write(b"  1[label=\"true\"];\n")?;
+        for node in self.all_nodes().iter() {
+            if let Vertex::Var { ref var_index, .. } = ****node {
+                let i = if let Some(b) = node.is_constant() {
+                    b as usize
+                } else {
+                    *index.get(node).unwrap()
+                };
+                sink.write(format!("  {i}[label=\"{var_index}\"];\n").as_bytes())?;
+            }
+        }
+        // edges
+        for node in self.all_nodes().iter() {
+            if let Vertex::Var {
+                ref low, ref high, ..
+            } = ****node
+            {
+                let i = if let Some(b) = node.is_constant() {
+                    b as usize
+                } else {
+                    *index.get(node).unwrap()
+                };
+                let j = if let Some(b) = low.is_constant() {
+                    b as usize
+                } else {
+                    *index.get(&low).unwrap()
+                };
+                let k = if let Some(b) = high.is_constant() {
+                    b as usize
+                } else {
+                    *index.get(&high).unwrap()
+                };
+                if j == k {
+                    sink.write(format!("  {i} -> {j}[color=black];\n").as_bytes())?;
+                } else {
+                    sink.write(
+                        format!("  {i} -> {j}[color=blue, style=\"dotted\"];\n").as_bytes(),
+                    )?;
+                    sink.write(format!("  {i} -> {k}[color=red, style=\"dotted\"];\n").as_bytes())?;
+                }
+            }
+        }
+        sink.write(b"}}\n")?;
+        Ok(())
     }
 }
