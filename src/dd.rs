@@ -109,8 +109,8 @@ impl DecisionDiagramTrait for Node {
             }
         }
         // nodes
-        sink.write(b"  0[label=\"false\"];\n")?;
-        sink.write(b"  1[label=\"true\"];\n")?;
+        sink.write(b"  0[style=filled,fillcolor=\"gray80\",label=\"false\",shape=\"box\"];\n")?;
+        sink.write(b"  1[style=filled,fillcolor=\"gray95\",label=\"true\",shape=\"box\"];\n")?;
         for node in self.all_nodes().iter() {
             if let Vertex::Var { ref var_index, .. } = ****node {
                 let i = if let Some(b) = node.is_constant() {
@@ -143,12 +143,10 @@ impl DecisionDiagramTrait for Node {
                     *index.get(&high).unwrap()
                 };
                 if j == k {
-                    sink.write(format!("  {i} -> {j}[color=black];\n").as_bytes())?;
+                    sink.write(format!("  {i} -> {j}[color=black,penwidth=2];\n").as_bytes())?;
                 } else {
-                    sink.write(
-                        format!("  {i} -> {j}[color=blue, style=\"dotted\"];\n").as_bytes(),
-                    )?;
-                    sink.write(format!("  {i} -> {k}[color=red, style=\"dotted\"];\n").as_bytes())?;
+                    sink.write(format!("  {i} -> {j}[color=blue];\n").as_bytes())?;
+                    sink.write(format!("  {i} -> {k}[color=red,style=\"dotted\"];\n").as_bytes())?;
                 }
             }
         }
