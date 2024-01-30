@@ -26,6 +26,7 @@ pub trait DecisionDiagramTrait {
     fn new_constant(b: bool) -> Self;
     fn new_var(var_index: usize, low: Node, high: Node) -> Self;
     fn is_constant(&self) -> Option<bool>;
+    fn var_index(&self) -> Option<usize>;
     fn all_nodes<'a>(&'a self) -> HashSet<&Node>;
     fn len(&self) -> usize;
     fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()>;
@@ -55,6 +56,20 @@ impl DecisionDiagramTrait for Node {
         match ***self {
             Vertex::Bool(b) => Some(b),
             Vertex::Var { .. } => None,
+        }
+    }
+    /// returns the number of nodes under self and self itself.
+    ///```
+    /// use ddir::dd::{DecisionDiagramTrait, Node};
+    ///
+    /// let f = Node::new_constant(false);
+    /// let n = Node::new_var(2, f.clone(), f.clone());
+    /// assert_eq!(n.var_index(), Some(2));
+    ///```
+    fn var_index(&self) -> Option<usize> {
+        match ***self {
+            Vertex::Bool(_) => None,
+            Vertex::Var { var_index, .. } => Some(var_index),
         }
     }
     /// returns the number of nodes under self and self itself.
