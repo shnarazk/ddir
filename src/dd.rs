@@ -1,11 +1,14 @@
-use std::{
-    boxed::Box,
-    collections::{HashMap, HashSet},
-    io,
-    rc::Rc,
+use {
+    crate::bdd::BDD,
+    std::{
+        boxed::Box,
+        collections::{HashMap, HashSet},
+        io,
+        rc::Rc,
+    },
 };
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct DDT {
     graph: Node,
 }
@@ -21,6 +24,11 @@ pub enum Vertex {
         high: Node,
     },
 }
+impl Default for Vertex {
+    fn default() -> Self {
+        Vertex::Bool(false)
+    }
+}
 
 pub trait DecisionDiagramTrait {
     fn new_constant(b: bool) -> Self;
@@ -30,6 +38,38 @@ pub trait DecisionDiagramTrait {
     fn all_nodes<'a>(&'a self) -> HashSet<&Node>;
     fn len(&self) -> usize;
     fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()>;
+    fn to_bdd(&self) -> BDD;
+}
+
+impl DecisionDiagramTrait for DDT {
+    fn new_constant(b: bool) -> Self {
+        Self {
+            graph: Node::new_constant(b),
+        }
+    }
+    fn new_var(var_index: usize, low: Node, high: Node) -> Self {
+        Self {
+            graph: Node::new_var(var_index, low, high),
+        }
+    }
+    fn is_constant(&self) -> Option<bool> {
+        self.graph.is_constant()
+    }
+    fn var_index(&self) -> Option<usize> {
+        self.graph.var_index()
+    }
+    fn all_nodes<'a>(&'a self) -> HashSet<&Node> {
+        self.graph.all_nodes()
+    }
+    fn len(&self) -> usize {
+        self.graph.len()
+    }
+    fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()> {
+        self.graph.write_as_graphvis(sink)
+    }
+    fn to_bdd(&self) -> BDD {
+        self.graph.to_bdd()
+    }
 }
 
 impl DecisionDiagramTrait for Node {
@@ -167,5 +207,8 @@ impl DecisionDiagramTrait for Node {
         }
         sink.write(b"}}\n")?;
         Ok(())
+    }
+    fn to_bdd(&self) -> BDD {
+        todo!()
     }
 }
