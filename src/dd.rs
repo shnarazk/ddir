@@ -35,8 +35,11 @@ pub trait DecisionDiagramTrait {
     fn new_var(var_index: usize, low: Node, high: Node) -> Self;
     fn is_constant(&self) -> Option<bool>;
     fn var_index(&self) -> Option<usize>;
-    fn all_nodes<'a>(&'a self) -> HashSet<&Node>;
+    fn all_nodes(&self) -> HashSet<&Node>;
     fn len(&self) -> usize;
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
     fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()>;
     fn to_bdd(&self) -> BDD;
 }
@@ -58,7 +61,7 @@ impl DecisionDiagramTrait for DDT {
     fn var_index(&self) -> Option<usize> {
         self.graph.var_index()
     }
-    fn all_nodes<'a>(&'a self) -> HashSet<&Node> {
+    fn all_nodes(&self) -> HashSet<&Node> {
         self.graph.all_nodes()
     }
     fn len(&self) -> usize {
@@ -123,7 +126,7 @@ impl DecisionDiagramTrait for Node {
     /// let k = Node::new_var(1, n.clone(), f.clone());
     /// assert_eq!(k.len(), 3);
     ///```
-    fn len<'a>(&'a self) -> usize {
+    fn len(&self) -> usize {
         self.all_nodes().len()
     }
     /// returns all nodes under self and self itself.
@@ -151,7 +154,7 @@ impl DecisionDiagramTrait for Node {
         map
     }
     fn write_as_graphvis(&self, mut sink: impl io::Write) -> io::Result<()> {
-        sink.write(
+        sink.write_all(
             b"digraph regexp {{
   fontname=\"Helvetica,Arial,sans-serif\"
   node [fontname=\"Helvetica,Arial,sans-serif\"]
@@ -164,8 +167,8 @@ impl DecisionDiagramTrait for Node {
             }
         }
         // nodes
-        sink.write(b"  0[style=filled,fillcolor=\"gray80\",label=\"false\",shape=\"box\"];\n")?;
-        sink.write(b"  1[style=filled,fillcolor=\"gray95\",label=\"true\",shape=\"box\"];\n")?;
+        sink.write_all(b"  0[style=filled,fillcolor=\"gray80\",label=\"false\",shape=\"box\"];\n")?;
+        sink.write_all(b"  1[style=filled,fillcolor=\"gray95\",label=\"true\",shape=\"box\"];\n")?;
         for node in self.all_nodes().iter() {
             if let Vertex::Var { ref var_index, .. } = ****node {
                 let i = if let Some(b) = node.is_constant() {
@@ -173,7 +176,7 @@ impl DecisionDiagramTrait for Node {
                 } else {
                     *index.get(node).unwrap()
                 };
-                sink.write(format!("  {i}[label=\"{var_index}\"];\n").as_bytes())?;
+                sink.write_all(format!("  {i}[label=\"{var_index}\"];\n").as_bytes())?;
             }
         }
         // edges
@@ -198,14 +201,16 @@ impl DecisionDiagramTrait for Node {
                     *index.get(&high).unwrap()
                 };
                 if j == k {
-                    sink.write(format!("  {i} -> {j}[color=black,penwidth=2];\n").as_bytes())?;
+                    sink.write_all(format!("  {i} -> {j}[color=black,penwidth=2];\n").as_bytes())?;
                 } else {
-                    sink.write(format!("  {i} -> {j}[color=blue];\n").as_bytes())?;
-                    sink.write(format!("  {i} -> {k}[color=red,style=\"dotted\"];\n").as_bytes())?;
+                    sink.write_all(format!("  {i} -> {j}[color=blue];\n").as_bytes())?;
+                    sink.write_all(
+                        format!("  {i} -> {k}[color=red,style=\"dotted\"];\n").as_bytes(),
+                    )?;
                 }
             }
         }
-        sink.write(b"}}\n")?;
+        sink.write_all(b"}}\n")?;
         Ok(())
     }
     fn to_bdd(&self) -> BDD {

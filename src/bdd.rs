@@ -28,7 +28,7 @@ impl DecisionDiagramTrait for BDD {
     fn var_index(&self) -> Option<usize> {
         self.graph.var_index()
     }
-    fn all_nodes<'a>(&'a self) -> HashSet<&Node> {
+    fn all_nodes(&self) -> HashSet<&Node> {
         self.graph.all_nodes()
     }
     fn len(&self) -> usize {
