@@ -207,3 +207,81 @@ impl DecisionDiagramTrait for Node {
         Ok(())
     }
 }
+
+pub fn sample1() -> DDT {
+    macro_rules! F {
+        () => {
+            DDT::new_constant(false)
+        };
+    }
+    macro_rules! T {
+        () => {
+            DDT::new_constant(true)
+        };
+    }
+    // 1 -> {
+    //     (2 -> {
+    //          (3 -> {
+    //               (4 -> {
+    //                    (5 -> {
+    //                         (6 -> {true. true}).
+    //                         (6 -> {true. false}) }).
+    //                    (5 -> {
+    //                         (6 -> {true. true}).
+    //                         (6 -> {false. false}) }) }).
+    //               (4 -> {
+    //                    (5 -> {
+    //                         (6 -> {true. true}).
+    //                         (6 -> {true. false}) }).
+    //                    (5 -> {
+    //                         (6 -> {false. false}).
+    //                         (6 -> {false. false}) }) }) }).
+    //          (3 -> {
+    //               (4 -> {
+    //                    (5 -> {
+    //                         (6 -> {true. true}).
+    //                         (6 -> {true. false}) }).
+    //                    (5 -> {
+    //                         (6 -> {true. true}).
+    //                         (6 -> {false. false}) }) }).
+    //               (4 -> {
+    //                    (5 -> {
+    //                         (6 -> {false. false}).
+    //                         (6 -> {false. false}) }).
+    //                    (5 -> {
+    //                         (6 -> {false. false}).
+    //                         (6 -> {false. false}) }) }) }) }).
+    //     (2 -> {
+    //          (3 -> {
+    //               (4 -> {
+    //                    (5 -> {
+    //                         (6 -> {true. false}).
+    //                         (6 -> {true. false}) }).
+    //                    (5 -> {
+    //                         (6 -> {true. false}).
+    //                         (6 -> {false. false}) }) }).
+    //               (4 -> {
+    //                    (5 -> {
+    //                         (6 -> {true. false}).
+    //                         (6 -> {true. false}) }).
+    //                    (5 -> {
+    //                         (6 -> {false. false}).
+    //                         (6 -> {false. false}) }) }) }).
+    //          (3 -> {
+    //               (4 -> {
+    //                    (5 -> {
+    //                         (6 -> {false. false}).
+    //                         (6 -> {false. false}) }).
+    //                    (5 -> {
+    //                         (6 -> {false. false}).
+    //                         (6 -> {false. false}) }) }).
+    //               (4 -> {
+    //                    (5 -> {
+    //                         (6 -> {false. false}).
+    //                         (6 -> {false. false}) }).
+    //                    (5 -> {
+    //                         (6 -> {false. false}).
+    //                         (6 -> {false. false}) }) }) }) }) }
+    //
+    todo!()
+}
