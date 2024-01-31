@@ -65,7 +65,7 @@ impl ToBinaryDecisionDiagram for BDD {
 
 impl ToBinaryDecisionDiagram for DDT {
     fn to_bdd(&self) -> BDD {
-        let bdd = BDD {
+        let mut bdd = BDD {
             graph: self.graph.clone(),
             ..Default::default()
         };
@@ -76,7 +76,7 @@ impl ToBinaryDecisionDiagram for DDT {
 
 impl ToBinaryDecisionDiagram for Node {
     fn to_bdd(&self) -> BDD {
-        let bdd = BDD {
+        let mut bdd = BDD {
             graph: self.clone(),
             ..Default::default()
         };
@@ -86,13 +86,14 @@ impl ToBinaryDecisionDiagram for Node {
 }
 
 pub trait BinaryDecisionDiagram {
-    fn reduce(&self);
+    fn reduce(&mut self);
 }
 
 impl BinaryDecisionDiagram for BDD {
     // convert tree to BDD
-    fn reduce(&self) {
-        let nodes = self.graph.all_nodes();
+    fn reduce(&mut self) {
+        let root = self.graph.clone();
+        let nodes = root.all_nodes();
         let mut to_index: HashMap<Node, usize> = HashMap::new();
         let mut from_index: HashMap<usize, Node> = HashMap::new();
         from_index.insert(0, Node::new_constant(false));
@@ -161,6 +162,25 @@ impl BinaryDecisionDiagram for BDD {
             }
         }
         // pick up a tree from the hash-table
-        todo!()
+        self.graph = from_index
+            .get(to_index.get(&root).unwrap())
+            .unwrap()
+            .clone();
+        dbg!(&self.graph);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::bdd::{ToBinaryDecisionDiagram, BDD};
+    use crate::dd::{DecisionDiagramTrait, Node, DDT};
+
+    #[test]
+    fn test() {
+        let f = Node::new_constant(false);
+        let n: Node = Node::new_var(2, f.clone(), f.clone());
+        let tree: DDT = DDT { graph: n };
+        let bdd: BDD = tree.to_bdd();
+        assert_eq!(bdd.len(), 1);
     }
 }
