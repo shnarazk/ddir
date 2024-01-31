@@ -1,16 +1,13 @@
-use {
-    crate::bdd::BDD,
-    std::{
-        boxed::Box,
-        collections::{HashMap, HashSet},
-        io,
-        rc::Rc,
-    },
+use std::{
+    boxed::Box,
+    collections::{HashMap, HashSet},
+    io,
+    rc::Rc,
 };
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct DDT {
-    graph: Node,
+    pub(crate) graph: Node,
 }
 
 pub type Node = Rc<Box<Vertex>>;
@@ -41,7 +38,6 @@ pub trait DecisionDiagramTrait {
         self.len() == 0
     }
     fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()>;
-    fn to_bdd(&self) -> BDD;
 }
 
 impl DecisionDiagramTrait for DDT {
@@ -69,9 +65,6 @@ impl DecisionDiagramTrait for DDT {
     }
     fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()> {
         self.graph.write_as_graphvis(sink)
-    }
-    fn to_bdd(&self) -> BDD {
-        self.graph.to_bdd()
     }
 }
 
@@ -212,8 +205,5 @@ impl DecisionDiagramTrait for Node {
         }
         sink.write_all(b"}}\n")?;
         Ok(())
-    }
-    fn to_bdd(&self) -> BDD {
-        todo!()
     }
 }
