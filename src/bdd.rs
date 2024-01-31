@@ -5,7 +5,6 @@ use {
         collections::{HashMap, HashSet},
         io,
         marker::PhantomData,
-        rc::Rc,
     },
 };
 
@@ -94,20 +93,20 @@ impl BinaryDecisionDiagram for BDD {
     // convert tree to BDD
     fn reduce(&self) {
         let nodes = self.graph.all_nodes();
-        let mut to_index: HashMap<&Node, usize> = HashMap::new();
-        let mut from_index: HashMap<usize, &Node> = HashMap::new();
+        let mut to_index: HashMap<Node, usize> = HashMap::new();
+        let mut from_index: HashMap<usize, Node> = HashMap::new();
+        from_index.insert(0, Node::new_constant(false));
+        from_index.insert(1, Node::new_constant(true));
         let mut vlist: HashMap<usize, Vec<&Node>> = HashMap::new();
         // put each vertex u on list vlist[u.var_index]
-        for n in nodes.iter() {
+        for (i, n) in nodes.iter().cloned().enumerate() {
             if let Some(v) = n.var_index() {
-                to_index.insert(n, v + 2);
-                from_index.insert(v + 2, n);
-                vlist.entry(v + 2).or_default().push(n);
+                to_index.insert(n.clone(), 1 + 2);
+                from_index.insert(i + 2, n.clone());
+                vlist.entry(v).or_default().push(n);
             } else if let Some(b) = n.is_constant() {
-                let i = b as usize;
-                to_index.insert(n, i);
-                from_index.insert(i, n);
-                vlist.entry(b as usize).or_default().push(n);
+                to_index.insert(n.clone(), b as usize);
+                from_index.insert(i, n.clone());
             }
         }
         let mut next_id: usize = 2;
@@ -115,18 +114,18 @@ impl BinaryDecisionDiagram for BDD {
             let lst = vlist.get(vi).unwrap();
             let mut q: Vec<((usize, usize), &Node)> = Vec::new();
             let mut old_key: (usize, usize) = (0, 0);
-            for node in lst.iter() {
-                match ****node {
+            for node in lst.iter().cloned() {
+                match ***node {
                     Vertex::Bool(_) => (),
                     Vertex::Var {
                         ref low, ref high, ..
                     } => {
-                        if to_index.get(&low) == to_index.get(&high) {
+                        if to_index.get(low) == to_index.get(high) {
                             // redundant vertex
-                            to_index.insert(*node, *to_index.get(&low).unwrap());
+                            to_index.insert(node.clone(), *to_index.get(low).unwrap());
                         } else {
                             q.push((
-                                (*to_index.get(&low).unwrap(), *to_index.get(&high).unwrap()),
+                                (*to_index.get(low).unwrap(), *to_index.get(high).unwrap()),
                                 node,
                             ));
                         }
@@ -134,17 +133,34 @@ impl BinaryDecisionDiagram for BDD {
                 }
             }
             q.sort_unstable_by_key(|(k, _)| *k);
-            for (key, node) in q.iter() {
-                if *key == old_key {
-                    to_index.insert(node, next_id);
+            for (key, node) in q.iter().cloned() {
+                if key == old_key {
+                    to_index.insert(node.clone(), next_id);
                 } else {
                     next_id += 1;
-                    // FIXME: substitute Rc<RwLock<Node> for Rc<Box<Node>>
-                    // Rc::get_mut(&mut **node);
-                    old_key = *key;
+                    match ***node {
+                        Vertex::Bool(_) => {
+                            to_index.insert(node.clone(), next_id);
+                            from_index.insert(next_id, node.clone());
+                        }
+                        Vertex::Var {
+                            var_index,
+                            ref low,
+                            ref high,
+                        } => {
+                            let l = from_index.get(to_index.get(low).unwrap()).unwrap();
+                            let h = from_index.get(to_index.get(high).unwrap()).unwrap();
+                            let n = Node::new_var(var_index, (*l).clone(), (*h).clone());
+                            to_index.insert(n.clone(), next_id);
+                            from_index.insert(next_id, n);
+                            // Rc::get_mut(&mut **node);
+                        }
+                    }
+                    old_key = key;
                 }
             }
         }
+        // pick up a tree from the hash-table
         todo!()
     }
 }
