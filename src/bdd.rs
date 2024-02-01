@@ -276,7 +276,7 @@ impl BinaryDecisionDiagram for BDD {
             merged.insert(hash_key, u.clone());
             u
         }
-        BDD {
+        let mut applied = BDD {
             graph: aux(
                 &(op, unit),
                 (self.graph.clone(), other.graph.clone()),
@@ -285,7 +285,9 @@ impl BinaryDecisionDiagram for BDD {
                 &mut merged,
             ),
             ..Default::default()
-        }
+        };
+        applied.reduce();
+        applied
     }
 }
 
