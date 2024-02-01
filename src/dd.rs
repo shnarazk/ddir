@@ -238,160 +238,163 @@ impl DecisionDiagramNode for Node {
     }
 }
 
-macro_rules! F {
-    () => {
-        Node::new_constant(false)
-    };
-}
-macro_rules! T {
-    () => {
-        Node::new_constant(true)
-    };
-}
-macro_rules! D {
-    ($v: expr, $l: expr, $h: expr) => {
-        Node::new_var($v, $l, $h)
-    };
-}
+pub mod example {
+    use super::*;
 
-/// return the independence sets of 6 cyclic chain
-pub fn example1() -> DDT {
-    DDT {
-        graph: D!(
-            1, //                                 1 -> {
-            D!(
-                2, //                               (2 -> {
+    macro_rules! F {
+        () => {
+            Node::new_constant(false)
+        };
+    }
+    macro_rules! T {
+        () => {
+            Node::new_constant(true)
+        };
+    }
+    macro_rules! D {
+        ($v: expr, $l: expr, $h: expr) => {
+            Node::new_var($v, $l, $h)
+        };
+    }
+    /// return the independent sets of 6 cyclic chain
+    pub fn independent_set() -> DDT {
+        DDT {
+            graph: D!(
+                1, //                                 1 -> {
                 D!(
-                    3, //                             (3 -> {
+                    2, //                               (2 -> {
                     D!(
-                        4, //                           (4 -> {
+                        3, //                             (3 -> {
                         D!(
-                            5,                 //         (5 -> {
-                            D!(6, T!(), T!()), //           (6 -> {true. true}).
-                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                            4, //                           (4 -> {
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, T!(), T!()), //           (6 -> {true. true}).
+                                D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                            ),
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, T!(), T!()), //           (6 -> {true. true}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                            )
                         ),
                         D!(
-                            5,                 //         (5 -> {
-                            D!(6, T!(), T!()), //           (6 -> {true. true}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                            4, //                           (4 -> {
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, T!(), T!()), //           (6 -> {true. true}).
+                                D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                            ),
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, F!(), F!()), //           (6 -> {false. false}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }).
+                            )
                         )
                     ),
                     D!(
-                        4, //                           (4 -> {
+                        3, //                             (3 -> {
                         D!(
-                            5,                 //         (5 -> {
-                            D!(6, T!(), T!()), //           (6 -> {true. true}).
-                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                            4, //                           (4 -> {
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, T!(), T!()), //           (6 -> {true. true}).
+                                D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                            ),
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, T!(), T!()), //           (6 -> {true. true}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                            )
                         ),
                         D!(
-                            5,                 //         (5 -> {
-                            D!(6, F!(), F!()), //           (6 -> {false. false}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }).
+                            4, //                           (4 -> {
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, F!(), F!()), //           (6 -> {false. false}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }).
+                            ),
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, F!(), F!()), //           (6 -> {false. false}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }) }),
+                            )
                         )
                     )
                 ),
                 D!(
-                    3, //                             (3 -> {
+                    2, //                               (2 -> {
                     D!(
-                        4, //                           (4 -> {
+                        3, //                             (3 -> {
                         D!(
-                            5,                 //         (5 -> {
-                            D!(6, T!(), T!()), //           (6 -> {true. true}).
-                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                            4, //                           (4 -> {
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, T!(), F!()), //           (6 -> {true. false}).
+                                D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                            ),
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, T!(), F!()), //           (6 -> {true. false}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                            )
                         ),
                         D!(
-                            5,                 //         (5 -> {
-                            D!(6, T!(), T!()), //           (6 -> {true. true}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                            4, //                           (4 -> {
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, T!(), F!()), //           (6 -> {true. false}).
+                                D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                            ),
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, F!(), F!()), //           (6 -> {false. false}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }).
+                            )
                         )
                     ),
                     D!(
-                        4, //                           (4 -> {
+                        3, //                             (3 -> {
                         D!(
-                            5,                 //         (5 -> {
-                            D!(6, F!(), F!()), //           (6 -> {false. false}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }).
+                            4, //                           (4 -> {
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, F!(), F!()), //           (6 -> {false. false}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }).
+                            ),
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, F!(), F!()), //           (6 -> {false. false}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                            )
                         ),
                         D!(
-                            5,                 //         (5 -> {
-                            D!(6, F!(), F!()), //           (6 -> {false. false}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }) }),
+                            4, //                           (4 -> {
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, F!(), F!()), //           (6 -> {false. false}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }).
+                            ),
+                            D!(
+                                5,                 //         (5 -> {
+                                D!(6, F!(), F!()), //           (6 -> {false. false}).
+                                D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }) }) })
+                            )
                         )
                     )
                 )
             ),
-            D!(
-                2, //                               (2 -> {
-                D!(
-                    3, //                             (3 -> {
-                    D!(
-                        4, //                           (4 -> {
-                        D!(
-                            5,                 //         (5 -> {
-                            D!(6, T!(), F!()), //           (6 -> {true. false}).
-                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
-                        ),
-                        D!(
-                            5,                 //         (5 -> {
-                            D!(6, T!(), F!()), //           (6 -> {true. false}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
-                        )
-                    ),
-                    D!(
-                        4, //                           (4 -> {
-                        D!(
-                            5,                 //         (5 -> {
-                            D!(6, T!(), F!()), //           (6 -> {true. false}).
-                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
-                        ),
-                        D!(
-                            5,                 //         (5 -> {
-                            D!(6, F!(), F!()), //           (6 -> {false. false}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }).
-                        )
-                    )
-                ),
-                D!(
-                    3, //                             (3 -> {
-                    D!(
-                        4, //                           (4 -> {
-                        D!(
-                            5,                 //         (5 -> {
-                            D!(6, F!(), F!()), //           (6 -> {false. false}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }).
-                        ),
-                        D!(
-                            5,                 //         (5 -> {
-                            D!(6, F!(), F!()), //           (6 -> {false. false}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
-                        )
-                    ),
-                    D!(
-                        4, //                           (4 -> {
-                        D!(
-                            5,                 //         (5 -> {
-                            D!(6, F!(), F!()), //           (6 -> {false. false}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }).
-                        ),
-                        D!(
-                            5,                 //         (5 -> {
-                            D!(6, F!(), F!()), //           (6 -> {false. false}).
-                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }) }) })
-                        )
-                    )
-                )
-            )
-        ),
+        }
     }
-}
 
-/// majority
-pub fn example2() -> DDT {
-    DDT {
-        graph: D!(
-            1,
-            D!(2, F!(), D!(3, F!(), T!())),
-            D!(2, D!(3, F!(), T!()), T!())
-        ),
+    /// majority
+    pub fn majority() -> DDT {
+        DDT {
+            graph: D!(
+                1,
+                D!(2, F!(), D!(3, F!(), T!())),
+                D!(2, D!(3, F!(), T!()), T!())
+            ),
+        }
     }
 }
