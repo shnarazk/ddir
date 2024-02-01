@@ -5,7 +5,6 @@ use {
         collections::{HashMap, HashSet},
         io,
         marker::PhantomData,
-        rc::Rc,
     },
 };
 
@@ -118,7 +117,7 @@ impl BinaryDecisionDiagram for BDD {
             let mut q: Vec<((usize, usize), &Node)> = Vec::new();
             let mut old_key: (usize, usize) = (0, 0);
             for node in lst.iter().cloned() {
-                match ***node {
+                match **node {
                     Vertex::Bool(_) => (),
                     Vertex::Var {
                         ref low, ref high, ..
@@ -141,7 +140,7 @@ impl BinaryDecisionDiagram for BDD {
                     to_index.insert(node.clone(), next_id);
                 } else {
                     next_id += 1;
-                    match ***node {
+                    match **node {
                         Vertex::Bool(_) => {
                             to_index.insert(node.clone(), next_id);
                             from_index.insert(next_id, node.clone());
@@ -229,12 +228,9 @@ impl BinaryDecisionDiagram for BDD {
         fn aux(
             (op, unit): (Box<dyn Fn(bool, bool) -> bool>, bool),
             (v1, v2): (Node, Node),
-            (to_index, from_index): (
-                &mut HashMap<Rc<Box<Vertex>>, usize>,
-                &mut HashMap<usize, Rc<Box<Vertex>>>,
-            ),
-            evaluation: &mut HashMap<Rc<Box<Vertex>>, bool>,
-            merged: &mut HashMap<(usize, usize), Rc<Box<Vertex>>>,
+            (to_index, from_index): (&mut HashMap<Node, usize>, &mut HashMap<usize, Node>),
+            evaluation: &mut HashMap<Node, bool>,
+            merged: &mut HashMap<(usize, usize), Node>,
         ) -> Node {
             let hash_key = (*to_index.get(&v1).unwrap(), *to_index.get(&v2).unwrap());
             if let Some(n) = merged.get(&hash_key) {

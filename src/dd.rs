@@ -1,5 +1,4 @@
 use std::{
-    boxed::Box,
     collections::{HashMap, HashSet},
     hash::Hash,
     io, ptr,
@@ -11,7 +10,7 @@ pub struct DDT {
     pub(crate) graph: Node,
 }
 
-pub type Node = Rc<Box<Vertex>>;
+pub type Node = Rc<Vertex>;
 
 #[derive(Clone, Debug)]
 pub enum Vertex {
@@ -87,15 +86,15 @@ impl DecisionDiagramTrait for DDT {
 impl DecisionDiagramTrait for Node {
     /// returns a new terminal node.
     fn new_constant(b: bool) -> Self {
-        Rc::new(Box::new(Vertex::Bool(b)))
+        Rc::new(Vertex::Bool(b))
     }
     /// returns a new non-terminal node.
     fn new_var(var_index: usize, low: Node, high: Node) -> Self {
-        Rc::new(Box::new(Vertex::Var {
+        Rc::new(Vertex::Var {
             var_index,
             low,
             high,
-        }))
+        })
     }
     /// returns `None` if self is a non-terminal node.
     ///```
@@ -105,7 +104,7 @@ impl DecisionDiagramTrait for Node {
     /// assert!(f.is_constant().is_some());
     ///```
     fn is_constant(&self) -> Option<bool> {
-        match ***self {
+        match **self {
             Vertex::Bool(b) => Some(b),
             Vertex::Var { .. } => None,
         }
@@ -119,7 +118,7 @@ impl DecisionDiagramTrait for Node {
     /// assert_eq!(n.var_index(), Some(2));
     ///```
     fn var_index(&self) -> Option<usize> {
-        match ***self {
+        match **self {
             Vertex::Bool(_) => None,
             Vertex::Var { var_index, .. } => Some(var_index),
         }
@@ -153,7 +152,7 @@ impl DecisionDiagramTrait for Node {
             map.insert(node);
             if let Vertex::Var {
                 ref low, ref high, ..
-            } = ***node
+            } = **node
             {
                 traverse(low, map);
                 traverse(high, map);
@@ -171,7 +170,7 @@ impl DecisionDiagramTrait for Node {
         )?;
         let mut index: HashMap<&Node, usize> = HashMap::new();
         for (i, n) in self.all_nodes().iter().enumerate() {
-            if let Vertex::Var { .. } = ****n {
+            if let Vertex::Var { .. } = ***n {
                 index.insert(*n, i + 2);
             }
         }
@@ -179,7 +178,7 @@ impl DecisionDiagramTrait for Node {
         sink.write_all(b"  0[style=filled,fillcolor=\"gray80\",label=\"false\",shape=\"box\"];\n")?;
         sink.write_all(b"  1[style=filled,fillcolor=\"gray95\",label=\"true\",shape=\"box\"];\n")?;
         for node in self.all_nodes().iter() {
-            if let Vertex::Var { ref var_index, .. } = ****node {
+            if let Vertex::Var { ref var_index, .. } = ***node {
                 let i = if let Some(b) = node.is_constant() {
                     b as usize
                 } else {
@@ -192,7 +191,7 @@ impl DecisionDiagramTrait for Node {
         for node in self.all_nodes().iter() {
             if let Vertex::Var {
                 ref low, ref high, ..
-            } = ****node
+            } = ***node
             {
                 let i = if let Some(b) = node.is_constant() {
                     b as usize
