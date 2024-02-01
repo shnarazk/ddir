@@ -166,7 +166,7 @@ impl BinaryDecisionDiagram for BDD {
             .get(to_index.get(&root).unwrap())
             .unwrap()
             .clone();
-        dbg!(&self.graph);
+        // dbg!(&self.graph);
     }
 }
 
