@@ -43,11 +43,14 @@ impl Default for Vertex {
 }
 
 pub trait DecisionDiagramTrait {
+    // return the hashset of all (non)terminal nodes in graph.
     fn all_nodes(&self) -> HashSet<&Node>;
+    // return the number of (non)terminal nodes in graph.
     fn len(&self) -> usize;
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
+    // write the graph in graphvis format
     fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()>;
 }
 
@@ -55,6 +58,8 @@ pub trait DecisionDiagramNode {
     fn new_constant(b: bool) -> Self;
     fn new_var(var_index: usize, low: Node, high: Node) -> Self;
     fn is_constant(&self) -> Option<bool>;
+    // return 0 or 1 for terminal nodes, and `vi + 2` for nonterminal node which var_index is `vi`.
+    fn unified_key(&self) -> usize;
     fn var_index(&self) -> Option<usize>;
     fn low(&self) -> Option<&Self>;
     fn high(&self) -> Option<&Self>;
@@ -197,6 +202,12 @@ impl DecisionDiagramNode for Node {
         match **self {
             Vertex::Bool(b) => Some(b),
             Vertex::Var { .. } => None,
+        }
+    }
+    fn unified_key(&self) -> usize {
+        match **self {
+            Vertex::Bool(b) => b as usize,
+            Vertex::Var { var_index, .. } => var_index + 2,
         }
     }
     /// returns the number of nodes under self and self itself.
@@ -364,7 +375,7 @@ pub fn sample1() -> DDT {
                         D!(
                             5,                 //         (5 -> {
                             D!(6, F!(), F!()), //           (6 -> {false. false}).
-                            D!(6, F!(), F!()) //            (6 -> {false. false}) }) }) }) }) }                        )
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }) }) })
                         )
                     )
                 )

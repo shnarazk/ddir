@@ -89,7 +89,7 @@ impl BinaryDecisionDiagram for BDD {
         // put each vertex u on list vlist[u.var_index]
         for n in nodes.iter().cloned() {
             if let Some(v) = n.var_index() {
-                to_index.insert(n.clone(), 1 + 2);
+                to_index.insert(n.clone(), v + 2);
                 vlist.entry(v).or_default().push(n);
             } else if let Some(b) = n.is_constant() {
                 to_index.insert(n.clone(), b as usize);
@@ -231,37 +231,29 @@ impl BinaryDecisionDiagram for BDD {
             if let Some(b) = value {
                 return from_index.get(&(b as usize)).unwrap().clone();
             }
-            let v1bvi = if let Some(b) = v1.is_constant() {
-                b as usize
-            } else {
-                v1.var_index().unwrap() + 2
+            let v1key = v1.unified_key();
+            let v2key = v2.unified_key();
+            let key = match (v1key < 2, v2key < 2) {
+                (false, false) => v1key.min(v2key),
+                (false, true) => v1key,
+                (true, false) => v2key,
+                (true, true) => op(v1key == 1, v2key == 1) as usize,
             };
-            let v2bvi = if let Some(b) = v2.is_constant() {
-                b as usize
+            let u = if key < 2 {
+                Node::new_constant(key == 1)
             } else {
-                v2.var_index().unwrap() + 2
-            };
-            let bvi = match (v1bvi < 2, v2bvi < 2) {
-                (false, false) => v1bvi.min(v2bvi),
-                (false, true) => v1bvi,
-                (true, false) => v2bvi,
-                (true, true) => op(v1bvi == 1, v2bvi == 1) as usize,
-            };
-            let u = if bvi < 2 {
-                Node::new_constant(bvi == 1)
-            } else {
-                let (vlow1, vhigh1) = if v1bvi == bvi {
+                let (vlow1, vhigh1) = if v1key == key {
                     (v1.low().unwrap().clone(), v1.high().unwrap().clone())
                 } else {
                     (v1.clone(), v1.clone())
                 };
-                let (vlow2, vhigh2) = if v2bvi == bvi {
+                let (vlow2, vhigh2) = if v2key == key {
                     (v2.low().unwrap().clone(), v2.high().unwrap().clone())
                 } else {
                     (v2.clone(), v2.clone())
                 };
                 Node::new_var(
-                    bvi - 2,
+                    key - 2,
                     aux(
                         operator,
                         (vlow1, vlow2),
