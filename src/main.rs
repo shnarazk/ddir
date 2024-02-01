@@ -3,17 +3,16 @@ use {
         bdd::{ToBinaryDecisionDiagram, BDD},
         dd::{sample1, DecisionDiagramTrait, DDT},
     },
-    std::io,
+    std::fs::File,
 };
 
 fn main() {
-    let stdout = io::stdout();
-    // let f = Node::new_constant(false);
-    // let n = Node::new_var(2, f.clone(), f.clone());
-    // let k = Node::new_var(1, n.clone(), f.clone());
+    // let stdout = io::stdout();
+    let idp1: DDT = sample1();
+    let f1 = File::create("ind-tree.gv").expect("fail to create");
+    idp1.write_as_graphvis(f1).expect("fail to serialize");
 
-    // k.write_as_graphvis(stdout).expect("");
-    let idp: DDT = sample1();
-    // let idp: BDD = sample1().to_bdd();
-    idp.write_as_graphvis(stdout).expect("");
+    let idp2: BDD = sample1().to_bdd();
+    let f2 = File::create("ind-bdd.gv").expect("fail to create");
+    idp2.write_as_graphvis(f2).expect("fail to serialize")
 }
