@@ -87,6 +87,7 @@ impl ToBinaryDecisionDiagram for Node {
 
 pub trait BinaryDecisionDiagram {
     fn reduce(&mut self);
+    fn apply(&self, op: Box<dyn Fn(bool, bool) -> bool>, _other: &Self) -> BDD;
 }
 
 impl BinaryDecisionDiagram for BDD {
@@ -166,6 +167,27 @@ impl BinaryDecisionDiagram for BDD {
             // .get(to_index.get(&root).unwrap())
             .unwrap()
             .clone();
+    }
+    fn apply(&self, _op: Box<dyn Fn(bool, bool) -> bool>, other: &Self) -> BDD {
+        let mut from_index: HashMap<usize, Node> = HashMap::new();
+        from_index.insert(0, Node::new_constant(false));
+        from_index.insert(1, Node::new_constant(true));
+        let mut to_index: HashMap<Node, usize> = HashMap::new();
+        for (i, node) in self
+            .graph
+            .all_nodes()
+            .iter()
+            .chain(other.graph.all_nodes().iter())
+            .enumerate()
+        {
+            from_index.insert(i + 2, (*node).clone());
+            to_index.insert((*node).clone(), i + 2);
+        }
+        fn apply_aux(_v1: Node, _v2: Node) -> BDD {
+            todo!()
+        }
+        apply_aux(self.graph.clone(), other.graph.clone());
+        todo!()
     }
 }
 
