@@ -103,11 +103,11 @@ impl BinaryDecisionDiagram for BDD {
         for (i, n) in nodes.iter().cloned().enumerate() {
             if let Some(v) = n.var_index() {
                 to_index.insert(n.clone(), 1 + 2);
-                from_index.insert(i + 2, n.clone());
+                // from_index.insert(i + 2, n.clone());
                 vlist.entry(v).or_default().push(n);
             } else if let Some(b) = n.is_constant() {
                 to_index.insert(n.clone(), b as usize);
-                from_index.insert(i, n.clone());
+                // from_index.insert(i, n.clone());
             }
         }
         let mut next_id: usize = 2;
@@ -152,6 +152,7 @@ impl BinaryDecisionDiagram for BDD {
                             let l = from_index.get(to_index.get(low).unwrap()).unwrap();
                             let h = from_index.get(to_index.get(high).unwrap()).unwrap();
                             let n = Node::new_var(var_index, (*l).clone(), (*h).clone());
+                            to_index.insert(node.clone(), next_id);
                             to_index.insert(n.clone(), next_id);
                             from_index.insert(next_id, n);
                             // Rc::get_mut(&mut **node);
@@ -163,10 +164,10 @@ impl BinaryDecisionDiagram for BDD {
         }
         // pick up a tree from the hash-table
         self.graph = from_index
-            .get(to_index.get(&root).unwrap())
+            .get(&next_id)
+            // .get(to_index.get(&root).unwrap())
             .unwrap()
             .clone();
-        // dbg!(&self.graph);
     }
 }
 

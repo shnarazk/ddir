@@ -205,10 +205,10 @@ impl DecisionDiagramTrait for Node {
                 if j == k {
                     sink.write_all(format!("  {i} -> {j}[color=black,penwidth=2];\n").as_bytes())?;
                 } else {
-                    sink.write_all(format!("  {i} -> {j}[color=blue];\n").as_bytes())?;
                     sink.write_all(
-                        format!("  {i} -> {k}[color=red,style=\"dotted\"];\n").as_bytes(),
+                        format!("  {i} -> {j}[color=red,style=\"dotted\"];\n").as_bytes(),
                     )?;
+                    sink.write_all(format!("  {i} -> {k}[color=blue];\n").as_bytes())?;
                 }
             }
         }
