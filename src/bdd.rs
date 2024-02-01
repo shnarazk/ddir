@@ -163,8 +163,7 @@ impl BinaryDecisionDiagram for BDD {
         }
         // pick up a tree from the hash-table
         self.graph = from_index
-            .get(&next_id)
-            // .get(to_index.get(&root).unwrap())
+            .get(to_index.get(&root).unwrap())
             .unwrap()
             .clone();
     }
