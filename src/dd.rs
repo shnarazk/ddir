@@ -37,7 +37,7 @@ pub trait DecisionDiagramTrait {
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()>;
+    fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()>;
 }
 
 impl DecisionDiagramTrait for DDT {
@@ -63,8 +63,8 @@ impl DecisionDiagramTrait for DDT {
     fn len(&self) -> usize {
         self.graph.len()
     }
-    fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()> {
-        self.graph.write_as_graphvis(sink)
+    fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()> {
+        self.graph.write_as_gv(sink)
     }
 }
 
@@ -146,7 +146,7 @@ impl DecisionDiagramTrait for Node {
         traverse(self, &mut map);
         map
     }
-    fn write_as_graphvis(&self, mut sink: impl io::Write) -> io::Result<()> {
+    fn write_as_gv(&self, mut sink: impl io::Write) -> io::Result<()> {
         sink.write_all(
             b"digraph regexp {{
   fontname=\"Helvetica,Arial,sans-serif\"

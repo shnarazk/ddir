@@ -39,8 +39,8 @@ impl DecisionDiagramTrait for BDD {
     fn len(&self) -> usize {
         self.graph.len()
     }
-    fn write_as_graphvis(&self, sink: impl io::Write) -> io::Result<()> {
-        self.graph.write_as_graphvis(sink)
+    fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()> {
+        self.graph.write_as_gv(sink)
     }
 }
 

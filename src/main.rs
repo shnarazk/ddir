@@ -10,9 +10,9 @@ fn main() {
     // let stdout = io::stdout();
     let idp1: DDT = sample1();
     let f1 = File::create("ind-tree.gv").expect("fail to create");
-    idp1.write_as_graphvis(f1).expect("fail to serialize");
+    idp1.write_as_gv(f1).expect("fail to serialize");
 
     let idp2: BDD = sample1().to_bdd();
     let f2 = File::create("ind-bdd.gv").expect("fail to create");
-    idp2.write_as_graphvis(f2).expect("fail to serialize")
+    idp2.write_as_gv(f2).expect("fail to serialize")
 }
