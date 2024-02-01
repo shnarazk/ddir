@@ -397,4 +397,18 @@ pub mod example {
             ),
         }
     }
+    // From Figure 7 of Randal E. Bryant, Graph-Based Algorithms for Boolean
+    // Function Manipulation, IEEE Trans. en Comp., C-35-8, pp.677-691, Aug. 1986.
+    pub fn x1x2() -> DDT {
+        DDT {
+            graph: D!(1, D!(2, T!(), F!()), D!(3, F!(), T!())),
+        }
+    }
+    // From  Figure 7 of Randal E. Bryant, Graph-Based Algorithms for Boolean
+    // Function Manipulation, IEEE Trans. en Comp., C-35-8, pp.677-691, Aug. 1986.
+    pub fn x3() -> DDT {
+        DDT {
+            graph: D!(3, F!(), T!()),
+        }
+    }
 }

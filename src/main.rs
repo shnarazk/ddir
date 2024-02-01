@@ -1,6 +1,6 @@
 use {
     ddir::{
-        bdd::ToBinaryDecisionDiagram,
+        bdd::{BinaryDecisionDiagram, ToBinaryDecisionDiagram, BDD},
         dd::{example, DecisionDiagramTrait, DDT},
     },
     std::fs::File,
@@ -23,4 +23,10 @@ fn main() {
         .to_bdd()
         .write_as_gv(f4)
         .expect("fail to serialize");
+
+    let x12: BDD = example::x1x2().to_bdd();
+    let x3: BDD = example::x3().to_bdd();
+    let f5 = File::create("apply-bdd.gv").expect("fail to create");
+    let applied: BDD = x12.apply(Box::new(|a, b| a | b), true, &x3);
+    applied.write_as_gv(f5).expect("fail to save");
 }
