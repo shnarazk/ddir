@@ -1,5 +1,5 @@
 use {
-    crate::dd::{DecisionDiagramTrait, Node, Vertex, DDT},
+    crate::dd::{DecisionDiagramNode, DecisionDiagramTrait, Node, Vertex, DDT},
     itertools::Itertools,
     std::{
         collections::{HashMap, HashSet},
@@ -15,24 +15,6 @@ pub struct BDD {
 }
 
 impl DecisionDiagramTrait for BDD {
-    fn new_constant(b: bool) -> Self {
-        Self {
-            graph: Node::new_constant(b),
-            ..Default::default()
-        }
-    }
-    fn new_var(var_index: usize, low: Node, high: Node) -> Self {
-        Self {
-            graph: Node::new_var(var_index, low, high),
-            ..Default::default()
-        }
-    }
-    fn is_constant(&self) -> Option<bool> {
-        self.graph.is_constant()
-    }
-    fn var_index(&self) -> Option<usize> {
-        self.graph.var_index()
-    }
     fn all_nodes(&self) -> HashSet<&Node> {
         self.graph.all_nodes()
     }
@@ -258,23 +240,23 @@ impl BinaryDecisionDiagram for BDD {
             } else {
                 v2.var_index().unwrap() + 2
             };
-            let bvi = match (v1bvi < 2, v2bvi < 2) {
+            let _bvi = match (v1bvi < 2, v2bvi < 2) {
                 (false, false) => v1bvi.min(v2bvi),
                 (false, true) => v1bvi,
                 (true, false) => v2bvi,
                 (true, true) => op(v1bvi == 1, v2bvi == 1) as usize,
             };
             // let vlow1 := v1Literal = w varIndex ifTrue: [ v1 low ] ifFalse: [ v1 ].
-            let (vlow1, vhigh1) = if v1bvi == bvi {
-                (v1.low().unwrap(), v1.high().unwrap())
-            } else {
-                (v1, v1)
-            };
-            let (vlow2, vhigh2) = if v2bvi == bvi {
-                (v2.low().unwrap(), v2.high().unwrap())
-            } else {
-                (v2, v2)
-            };
+            // let (vlow1, vhigh1) = if v1bvi == bvi {
+            //     (v1.low().unwrap(), v1.high().unwrap())
+            // } else {
+            //     (v1, v1)
+            // };
+            // let (vlow2, vhigh2) = if v2bvi == bvi {
+            //     (v2.low().unwrap(), v2.high().unwrap())
+            // } else {
+            //     (v2, v2)
+            // };
             // TODO: replace v1 and v2
             let u = match (v1.is_constant(), v2.is_constant()) {
                 (Some(a), Some(b)) => Node::new_constant(op(a, b)),
@@ -311,7 +293,7 @@ impl BinaryDecisionDiagram for BDD {
 #[cfg(test)]
 mod test {
     use crate::bdd::{ToBinaryDecisionDiagram, BDD};
-    use crate::dd::{DecisionDiagramTrait, Node, DDT};
+    use crate::dd::{DecisionDiagramNode, DecisionDiagramTrait, Node, DDT};
 
     #[test]
     fn test() {

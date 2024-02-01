@@ -43,10 +43,6 @@ impl Default for Vertex {
 }
 
 pub trait DecisionDiagramTrait {
-    fn new_constant(b: bool) -> Self;
-    fn new_var(var_index: usize, low: Node, high: Node) -> Self;
-    fn is_constant(&self) -> Option<bool>;
-    fn var_index(&self) -> Option<usize>;
     fn all_nodes(&self) -> HashSet<&Node>;
     fn len(&self) -> usize;
     fn is_empty(&self) -> bool {
@@ -55,23 +51,16 @@ pub trait DecisionDiagramTrait {
     fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()>;
 }
 
+pub trait DecisionDiagramNode {
+    fn new_constant(b: bool) -> Self;
+    fn new_var(var_index: usize, low: Node, high: Node) -> Self;
+    fn is_constant(&self) -> Option<bool>;
+    fn var_index(&self) -> Option<usize>;
+    fn low(&self) -> Option<&Self>;
+    fn high(&self) -> Option<&Self>;
+}
+
 impl DecisionDiagramTrait for DDT {
-    fn new_constant(b: bool) -> Self {
-        Self {
-            graph: Node::new_constant(b),
-        }
-    }
-    fn new_var(var_index: usize, low: Node, high: Node) -> Self {
-        Self {
-            graph: Node::new_var(var_index, low, high),
-        }
-    }
-    fn is_constant(&self) -> Option<bool> {
-        self.graph.is_constant()
-    }
-    fn var_index(&self) -> Option<usize> {
-        self.graph.var_index()
-    }
     fn all_nodes(&self) -> HashSet<&Node> {
         self.graph.all_nodes()
     }
@@ -84,45 +73,6 @@ impl DecisionDiagramTrait for DDT {
 }
 
 impl DecisionDiagramTrait for Node {
-    /// returns a new terminal node.
-    fn new_constant(b: bool) -> Self {
-        Rc::new(Vertex::Bool(b))
-    }
-    /// returns a new non-terminal node.
-    fn new_var(var_index: usize, low: Node, high: Node) -> Self {
-        Rc::new(Vertex::Var {
-            var_index,
-            low,
-            high,
-        })
-    }
-    /// returns `None` if self is a non-terminal node.
-    ///```
-    /// use ddir::dd::{DecisionDiagramTrait, Node};
-    ///
-    /// let f = Node::new_constant(false);
-    /// assert!(f.is_constant().is_some());
-    ///```
-    fn is_constant(&self) -> Option<bool> {
-        match **self {
-            Vertex::Bool(b) => Some(b),
-            Vertex::Var { .. } => None,
-        }
-    }
-    /// returns the number of nodes under self and self itself.
-    ///```
-    /// use ddir::dd::{DecisionDiagramTrait, Node};
-    ///
-    /// let f = Node::new_constant(false);
-    /// let n = Node::new_var(2, f.clone(), f.clone());
-    /// assert_eq!(n.var_index(), Some(2));
-    ///```
-    fn var_index(&self) -> Option<usize> {
-        match **self {
-            Vertex::Bool(_) => None,
-            Vertex::Var { var_index, .. } => Some(var_index),
-        }
-    }
     /// returns the number of nodes under self and self itself.
     ///```
     /// use ddir::dd::{DecisionDiagramTrait, Node};
@@ -220,6 +170,60 @@ impl DecisionDiagramTrait for Node {
         }
         sink.write_all(b"}}\n")?;
         Ok(())
+    }
+}
+
+impl DecisionDiagramNode for Node {
+    /// returns a new terminal node.
+    fn new_constant(b: bool) -> Self {
+        Rc::new(Vertex::Bool(b))
+    }
+    /// returns a new non-terminal node.
+    fn new_var(var_index: usize, low: Node, high: Node) -> Self {
+        Rc::new(Vertex::Var {
+            var_index,
+            low,
+            high,
+        })
+    }
+    /// returns `None` if self is a non-terminal node.
+    ///```
+    /// use ddir::dd::{DecisionDiagramTrait, Node};
+    ///
+    /// let f = Node::new_constant(false);
+    /// assert!(f.is_constant().is_some());
+    ///```
+    fn is_constant(&self) -> Option<bool> {
+        match **self {
+            Vertex::Bool(b) => Some(b),
+            Vertex::Var { .. } => None,
+        }
+    }
+    /// returns the number of nodes under self and self itself.
+    ///```
+    /// use ddir::dd::{DecisionDiagramTrait, Node};
+    ///
+    /// let f = Node::new_constant(false);
+    /// let n = Node::new_var(2, f.clone(), f.clone());
+    /// assert_eq!(n.var_index(), Some(2));
+    ///```
+    fn var_index(&self) -> Option<usize> {
+        match **self {
+            Vertex::Bool(_) => None,
+            Vertex::Var { var_index, .. } => Some(var_index),
+        }
+    }
+    fn low(&self) -> Option<&Self> {
+        match **self {
+            Vertex::Bool(_) => None,
+            Vertex::Var { ref low, .. } => Some(low),
+        }
+    }
+    fn high(&self) -> Option<&Self> {
+        match **self {
+            Vertex::Bool(_) => None,
+            Vertex::Var { ref high, .. } => Some(high),
+        }
     }
 }
 
