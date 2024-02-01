@@ -100,14 +100,12 @@ impl BinaryDecisionDiagram for BDD {
         from_index.insert(1, Node::new_constant(true));
         let mut vlist: HashMap<usize, Vec<&Node>> = HashMap::new();
         // put each vertex u on list vlist[u.var_index]
-        for (i, n) in nodes.iter().cloned().enumerate() {
+        for n in nodes.iter().cloned() {
             if let Some(v) = n.var_index() {
                 to_index.insert(n.clone(), 1 + 2);
-                // from_index.insert(i + 2, n.clone());
                 vlist.entry(v).or_default().push(n);
             } else if let Some(b) = n.is_constant() {
                 to_index.insert(n.clone(), b as usize);
-                // from_index.insert(i, n.clone());
             }
         }
         let mut next_id: usize = 2;
