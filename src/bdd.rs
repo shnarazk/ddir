@@ -8,6 +8,8 @@ use {
     },
 };
 
+type BooleanOperator = (Box<dyn Fn(bool, bool) -> bool>, bool);
+
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct BDD {
     graph: Node,
@@ -208,7 +210,7 @@ impl BinaryDecisionDiagram for BDD {
         //   aMapping at: hashKey put: u.
         //   ^ u
         fn aux(
-            (op, unit): (Box<dyn Fn(bool, bool) -> bool>, bool),
+            operator @ (op, unit): &BooleanOperator,
             (v1, v2): (Node, Node),
             (to_index, from_index): (&mut HashMap<Node, usize>, &mut HashMap<usize, Node>),
             evaluation: &mut HashMap<Node, bool>,
@@ -221,15 +223,14 @@ impl BinaryDecisionDiagram for BDD {
             let value1 = evaluation.get(&v1);
             let value2 = evaluation.get(&v2);
             let value = match (value1, value2) {
-                (Some(a), _) if *a == unit => Some(unit),
-                (_, Some(b)) if *b == unit => Some(unit),
+                (Some(a), _) if *a == *unit => Some(*unit),
+                (_, Some(b)) if *b == *unit => Some(*unit),
                 (None, _) | (_, None) => None,
                 (Some(a), Some(b)) => Some(op(*a, *b)),
             };
             if let Some(b) = value {
                 return from_index.get(&(b as usize)).unwrap().clone();
             }
-            //            v1Index := v1 isLiteral ifTrue: [ v1 ] ifFalse: [ v1 varIndex ].
             let v1bvi = if let Some(b) = v1.is_constant() {
                 b as usize
             } else {
@@ -240,46 +241,52 @@ impl BinaryDecisionDiagram for BDD {
             } else {
                 v2.var_index().unwrap() + 2
             };
-            let _bvi = match (v1bvi < 2, v2bvi < 2) {
+            let bvi = match (v1bvi < 2, v2bvi < 2) {
                 (false, false) => v1bvi.min(v2bvi),
                 (false, true) => v1bvi,
                 (true, false) => v2bvi,
                 (true, true) => op(v1bvi == 1, v2bvi == 1) as usize,
             };
-            // let vlow1 := v1Literal = w varIndex ifTrue: [ v1 low ] ifFalse: [ v1 ].
-            // let (vlow1, vhigh1) = if v1bvi == bvi {
-            //     (v1.low().unwrap(), v1.high().unwrap())
-            // } else {
-            //     (v1, v1)
-            // };
-            // let (vlow2, vhigh2) = if v2bvi == bvi {
-            //     (v2.low().unwrap(), v2.high().unwrap())
-            // } else {
-            //     (v2, v2)
-            // };
-            // TODO: replace v1 and v2
-            let u = match (v1.is_constant(), v2.is_constant()) {
-                (Some(a), Some(b)) => Node::new_constant(op(a, b)),
-                (Some(_), None) => Node::new_var(v1.var_index().unwrap(), v1.clone(), v2.clone()),
-                (None, Some(_)) => Node::new_var(v2.var_index().unwrap(), v1.clone(), v2.clone()),
-                _ => Node::new_var(
-                    v1.var_index().unwrap().min(v2.var_index().unwrap()),
-                    v1.clone(),
-                    v2.clone(),
-                ),
+            let u = if bvi < 2 {
+                Node::new_constant(bvi == 1)
+            } else {
+                let (vlow1, vhigh1) = if v1bvi == bvi {
+                    (v1.low().unwrap().clone(), v1.high().unwrap().clone())
+                } else {
+                    (v1.clone(), v1.clone())
+                };
+                let (vlow2, vhigh2) = if v2bvi == bvi {
+                    (v2.low().unwrap().clone(), v2.high().unwrap().clone())
+                } else {
+                    (v2.clone(), v2.clone())
+                };
+                Node::new_var(
+                    bvi - 2,
+                    aux(
+                        operator,
+                        (vlow1, vlow2),
+                        (to_index, from_index),
+                        evaluation,
+                        merged,
+                    ),
+                    aux(
+                        operator,
+                        (vhigh1, vhigh2),
+                        (to_index, from_index),
+                        evaluation,
+                        merged,
+                    ),
+                )
             };
-            aux(
-                (op, unit),
-                (v1, v2),
-                (to_index, from_index),
-                evaluation,
-                merged,
-            );
+            if let Some(b) = value {
+                evaluation.insert(u.clone(), b);
+            }
+            merged.insert(hash_key, u.clone());
             u
         }
         BDD {
             graph: aux(
-                (op, unit),
+                &(op, unit),
                 (self.graph.clone(), other.graph.clone()),
                 (&mut to_index, &mut from_index),
                 &mut evaluation,
