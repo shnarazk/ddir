@@ -202,20 +202,20 @@ impl BinaryDecisionDiagram for BDD {
         //                ifFalse: [
         //                value1 ifNotNil: [ value2 ifNotNil: [ operator value: value1 value: value2 ] ] ].
         //   u := value ifNil: [
-        //            | v1Literal v2Literal vlow1 vlow2 vhigh1 vhigh2 w |
+        //            | v1Index v2Index vlow1 vlow2 vhigh1 vhigh2 w |
         //            "create a nonterminal vertex and evaluate further down"
         //            w := DDNode new.
         //            evaluation at: w put: value.
-        //            v1Literal := v1 isLiteral ifTrue: [ v1 ] ifFalse: [ v1 varIndex ].
-        //            v2Literal := v2 isLiteral ifTrue: [ v2 ] ifFalse: [ v2 varIndex ].
+        //            v1Index := v1 isLiteral ifTrue: [ v1 ] ifFalse: [ v1 varIndex ].
+        //            v2Index := v2 isLiteral ifTrue: [ v2 ] ifFalse: [ v2 varIndex ].
         //            w varIndex: (v1 isLiteral ifTrue: [
-        //                     v2 isLiteral ifTrue: [ operator value: v1 value: v2 ] ifFalse: [ v2Literal ] ]
+        //                     v2 isLiteral ifTrue: [ operator value: v1 value: v2 ] ifFalse: [ v2Index ] ]
         //                     ifFalse: [
-        //                     v2 isLiteral ifTrue: [ v1Literal ] ifFalse: [ v1 varIndex min: v2 varIndex ] ]).
-        //            vlow1 := v1Literal = w varIndex ifTrue: [ v1 low ] ifFalse: [ v1 ].
-        //            vlow2 := v2Literal = w varIndex ifTrue: [ v2 low ] ifFalse: [ v2 ].
-        //            vhigh1 := v1Literal = w varIndex ifTrue: [ v1 high ] ifFalse: [ v1 ].
-        //            vhigh2 := v2Literal = w varIndex ifTrue: [ v2 high ] ifFalse: [ v2 ].
+        //                     v2 isLiteral ifTrue: [ v1Index ] ifFalse: [ v1 varIndex min: v2 varIndex ] ]).
+        //            vlow1 := v1Index = w varIndex ifTrue: [ v1 low ] ifFalse: [ v1 ].
+        //            vlow2 := v2Index = w varIndex ifTrue: [ v2 low ] ifFalse: [ v2 ].
+        //            vhigh1 := v1Index = w varIndex ifTrue: [ v1 high ] ifFalse: [ v1 ].
+        //            vhigh2 := v2Index = w varIndex ifTrue: [ v2 high ] ifFalse: [ v2 ].
         //            w low: (self apply: operator
         //                     on: vlow1
         //                     and: vlow2).
@@ -247,6 +247,34 @@ impl BinaryDecisionDiagram for BDD {
             if let Some(b) = value {
                 return from_index.get(&(b as usize)).unwrap().clone();
             }
+            //            v1Index := v1 isLiteral ifTrue: [ v1 ] ifFalse: [ v1 varIndex ].
+            let v1bvi = if let Some(b) = v1.is_constant() {
+                b as usize
+            } else {
+                v1.var_index().unwrap() + 2
+            };
+            let v2bvi = if let Some(b) = v2.is_constant() {
+                b as usize
+            } else {
+                v2.var_index().unwrap() + 2
+            };
+            let bvi = match (v1bvi < 2, v2bvi < 2) {
+                (false, false) => v1bvi.min(v2bvi),
+                (false, true) => v1bvi,
+                (true, false) => v2bvi,
+                (true, true) => op(v1bvi == 1, v2bvi == 1) as usize,
+            };
+            // let vlow1 := v1Literal = w varIndex ifTrue: [ v1 low ] ifFalse: [ v1 ].
+            let (vlow1, vhigh1) = if v1bvi == bvi {
+                (v1.low().unwrap(), v1.high().unwrap())
+            } else {
+                (v1, v1)
+            };
+            let (vlow2, vhigh2) = if v2bvi == bvi {
+                (v2.low().unwrap(), v2.high().unwrap())
+            } else {
+                (v2, v2)
+            };
             // TODO: replace v1 and v2
             let u = match (v1.is_constant(), v2.is_constant()) {
                 (Some(a), Some(b)) => Node::new_constant(op(a, b)),
