@@ -9,6 +9,7 @@ use {
 fn main() {
     // let stdout = io::stdout();
     let idp1: DDT = sample1();
+    assert_eq!(idp1.len(), 127);
     let f1 = File::create("ind-tree.gv").expect("fail to create");
     idp1.write_as_gv(f1).expect("fail to serialize");
 

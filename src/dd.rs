@@ -1,7 +1,7 @@
 use std::{
     boxed::Box,
     collections::{HashMap, HashSet},
-    io,
+    io, ptr,
     rc::Rc,
 };
 
@@ -12,7 +12,7 @@ pub struct DDT {
 
 pub type Node = Rc<Box<Vertex>>;
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Hash)]
 pub enum Vertex {
     Bool(bool),
     Var {
@@ -21,6 +21,15 @@ pub enum Vertex {
         high: Node,
     },
 }
+
+impl PartialEq for Vertex {
+    fn eq(&self, other: &Self) -> bool {
+        ptr::eq(self, other)
+    }
+}
+
+impl Eq for Vertex {}
+
 impl Default for Vertex {
     fn default() -> Self {
         Vertex::Bool(false)
