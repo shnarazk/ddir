@@ -1,5 +1,5 @@
 use {
-    crate::dd::DecisionDiagramTrait,
+    crate::dd::DecisionDiagram,
     std::{
         collections::{HashMap, HashSet},
         hash::Hash,
@@ -51,10 +51,11 @@ impl Default for Vertex {
     }
 }
 
-impl DecisionDiagramTrait for Node {
+impl DecisionDiagram for Node {
     /// returns the number of nodes under self and self itself.
     ///```
-    /// use ddir::dd::{DecisionDiagramNode, DecisionDiagramTrait, Node};
+    /// use ddir::dd::DecisionDiagram;
+    /// use ddir::node::{DecisionDiagramNode, Node};
     ///
     /// let f = Node::new_constant(false);
     /// assert_eq!(f.len(), 1);
@@ -68,7 +69,8 @@ impl DecisionDiagramTrait for Node {
     }
     /// returns all nodes under self and self itself.
     ///```
-    /// use ddir::dd::{DecisionDiagramNode, DecisionDiagramTrait, Node};
+    /// use ddir::dd::DecisionDiagram;
+    /// use ddir::node::{DecisionDiagramNode, Node};
     ///
     /// let f = Node::new_constant(false);
     /// let n = Node::new_var(2, f.clone(), f.clone());
@@ -167,7 +169,8 @@ impl DecisionDiagramNode for Node {
     }
     /// returns `None` if self is a non-terminal node.
     ///```
-    /// use ddir::dd::{DecisionDiagramNode, DecisionDiagramTrait, Node};
+    /// use ddir::dd::DecisionDiagram;
+    /// use ddir::node::{DecisionDiagramNode, Node};
     ///
     /// let f = Node::new_constant(false);
     /// assert!(f.is_constant().is_some());
@@ -186,7 +189,8 @@ impl DecisionDiagramNode for Node {
     }
     /// returns the number of nodes under self and self itself.
     ///```
-    /// use ddir::dd::{DecisionDiagramNode, DecisionDiagramTrait, Node};
+    /// use ddir::dd::DecisionDiagram;
+    /// use ddir::node::{DecisionDiagramNode, Node};
     ///
     /// let f = Node::new_constant(false);
     /// let n = Node::new_var(2, f.clone(), f.clone());
@@ -209,5 +213,172 @@ impl DecisionDiagramNode for Node {
             Vertex::Bool(_) => None,
             Vertex::Var { ref high, .. } => Some(high),
         }
+    }
+}
+
+pub mod example {
+    use super::*;
+
+    macro_rules! F {
+        () => {
+            Node::new_constant(false)
+        };
+    }
+    macro_rules! T {
+        () => {
+            Node::new_constant(true)
+        };
+    }
+    macro_rules! D {
+        ($v: expr, $l: expr, $h: expr) => {
+            Node::new_var($v, $l, $h)
+        };
+    }
+    /// return the independent sets of 6 cyclic chain
+    pub fn independent_set() -> Node {
+        D!(
+            1, //                                 1 -> {
+            D!(
+                2, //                               (2 -> {
+                D!(
+                    3, //                             (3 -> {
+                    D!(
+                        4, //                           (4 -> {
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, T!(), T!()), //           (6 -> {true. true}).
+                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                        ),
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, T!(), T!()), //           (6 -> {true. true}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                        )
+                    ),
+                    D!(
+                        4, //                           (4 -> {
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, T!(), T!()), //           (6 -> {true. true}).
+                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                        ),
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, F!(), F!()), //           (6 -> {false. false}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }).
+                        )
+                    )
+                ),
+                D!(
+                    3, //                             (3 -> {
+                    D!(
+                        4, //                           (4 -> {
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, T!(), T!()), //           (6 -> {true. true}).
+                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                        ),
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, T!(), T!()), //           (6 -> {true. true}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                        )
+                    ),
+                    D!(
+                        4, //                           (4 -> {
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, F!(), F!()), //           (6 -> {false. false}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }).
+                        ),
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, F!(), F!()), //           (6 -> {false. false}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }) }),
+                        )
+                    )
+                )
+            ),
+            D!(
+                2, //                               (2 -> {
+                D!(
+                    3, //                             (3 -> {
+                    D!(
+                        4, //                           (4 -> {
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, T!(), F!()), //           (6 -> {true. false}).
+                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                        ),
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, T!(), F!()), //           (6 -> {true. false}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                        )
+                    ),
+                    D!(
+                        4, //                           (4 -> {
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, T!(), F!()), //           (6 -> {true. false}).
+                            D!(6, T!(), F!())  //           (6 -> {true. false}) }).
+                        ),
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, F!(), F!()), //           (6 -> {false. false}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }).
+                        )
+                    )
+                ),
+                D!(
+                    3, //                             (3 -> {
+                    D!(
+                        4, //                           (4 -> {
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, F!(), F!()), //           (6 -> {false. false}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }).
+                        ),
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, F!(), F!()), //           (6 -> {false. false}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }).
+                        )
+                    ),
+                    D!(
+                        4, //                           (4 -> {
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, F!(), F!()), //           (6 -> {false. false}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }).
+                        ),
+                        D!(
+                            5,                 //         (5 -> {
+                            D!(6, F!(), F!()), //           (6 -> {false. false}).
+                            D!(6, F!(), F!())  //           (6 -> {false. false}) }) }) }) }) })
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    /// majority
+    pub fn majority() -> Node {
+        D!(
+            1,
+            D!(2, F!(), D!(3, F!(), T!())),
+            D!(2, D!(3, F!(), T!()), T!())
+        )
+    }
+    // From Figure 7 of Randal E. Bryant, Graph-Based Algorithms for Boolean
+    // Function Manipulation, IEEE Trans. en Comp., C-35-8, pp.677-691, Aug. 1986.
+    pub fn x1x3() -> Node {
+        D!(1, T!(), D!(3, T!(), F!()))
+    }
+    // From Figure 7 of Randal E. Bryant, Graph-Based Algorithms for Boolean
+    // Function Manipulation, IEEE Trans. en Comp., C-35-8, pp.677-691, Aug. 1986.
+    pub fn x2x3() -> Node {
+        D!(2, F!(), D!(3, F!(), T!()))
     }
 }

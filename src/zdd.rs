@@ -1,5 +1,8 @@
 use {
-    crate::{dd::DecisionDiagramTrait, node::Node},
+    crate::{
+        dd::{DecisionDiagram, ReducedDecisionDiagram},
+        node::Node,
+    },
     std::{collections::HashSet, io, marker::PhantomData},
 };
 
@@ -9,7 +12,18 @@ pub struct ZDD {
     phantom: PhantomData<()>,
 }
 
-impl DecisionDiagramTrait for ZDD {
+impl ZDD {
+    pub fn new_from(graph: Node) -> ZDD {
+        let mut zdd = ZDD {
+            graph: graph.clone(),
+            ..Default::default()
+        };
+        zdd.reduce();
+        zdd
+    }
+}
+
+impl DecisionDiagram for ZDD {
     fn all_nodes(&self) -> HashSet<&Node> {
         self.graph.all_nodes()
     }
@@ -18,5 +32,14 @@ impl DecisionDiagramTrait for ZDD {
     }
     fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()> {
         self.graph.write_as_gv(sink)
+    }
+}
+
+impl ReducedDecisionDiagram for ZDD {
+    fn reduce(&mut self) {
+        todo!()
+    }
+    fn apply(&self, _op: Box<dyn Fn(bool, bool) -> bool>, _unit: bool, _other: &Self) -> Self {
+        todo!()
     }
 }

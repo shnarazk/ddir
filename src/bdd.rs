@@ -1,7 +1,6 @@
 use {
     crate::{
-        dd::{DecisionDiagramTrait, ReducedDecisionDiagram},
-        ddt::DDT,
+        dd::{DecisionDiagram, ReducedDecisionDiagram},
         node::{DecisionDiagramNode, Node, Vertex},
     },
     itertools::Itertools,
@@ -20,7 +19,18 @@ pub struct BDD {
     phantom: PhantomData<()>,
 }
 
-impl DecisionDiagramTrait for BDD {
+impl BDD {
+    pub fn new_from(graph: Node) -> BDD {
+        let mut bdd = BDD {
+            graph: graph.clone(),
+            ..Default::default()
+        };
+        bdd.reduce();
+        bdd
+    }
+}
+
+impl DecisionDiagram for BDD {
     fn all_nodes(&self) -> HashSet<&Node> {
         self.graph.all_nodes()
     }
@@ -29,47 +39,6 @@ impl DecisionDiagramTrait for BDD {
     }
     fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()> {
         self.graph.write_as_gv(sink)
-    }
-}
-
-impl BDD {
-    pub fn new_from(graph: DDT) -> BDD {
-        Self {
-            graph: graph.graph,
-            ..Default::default()
-        }
-    }
-}
-
-pub trait ToBinaryDecisionDiagram {
-    fn to_bdd(&self) -> BDD;
-}
-
-impl ToBinaryDecisionDiagram for BDD {
-    fn to_bdd(&self) -> BDD {
-        self.clone()
-    }
-}
-
-impl ToBinaryDecisionDiagram for DDT {
-    fn to_bdd(&self) -> BDD {
-        let mut bdd = BDD {
-            graph: self.graph.clone(),
-            ..Default::default()
-        };
-        bdd.reduce();
-        bdd
-    }
-}
-
-impl ToBinaryDecisionDiagram for Node {
-    fn to_bdd(&self) -> BDD {
-        let mut bdd = BDD {
-            graph: self.clone(),
-            ..Default::default()
-        };
-        bdd.reduce();
-        bdd
     }
 }
 
@@ -291,9 +260,8 @@ impl ReducedDecisionDiagram for BDD {
 #[cfg(test)]
 mod test {
     use crate::{
-        bdd::{ToBinaryDecisionDiagram, BDD},
-        dd::DecisionDiagramTrait,
-        ddt::DDT,
+        bdd::BDD,
+        dd::DecisionDiagram,
         node::{DecisionDiagramNode, Node},
     };
 
@@ -301,8 +269,7 @@ mod test {
     fn test() {
         let f = Node::new_constant(false);
         let n: Node = Node::new_var(2, f.clone(), f.clone());
-        let tree: DDT = DDT { graph: n };
-        let bdd: BDD = tree.to_bdd();
+        let bdd: BDD = BDD::new_from(n);
         assert_eq!(bdd.len(), 1);
     }
 }

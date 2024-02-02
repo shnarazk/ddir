@@ -10,7 +10,7 @@ pub trait ReducedDecisionDiagram {
     fn apply(&self, op: Box<dyn Fn(bool, bool) -> bool>, unit: bool, _other: &Self) -> Self;
 }
 
-pub trait DecisionDiagramTrait {
+pub trait DecisionDiagram {
     // return the hashset of all (non)terminal nodes in graph.
     fn all_nodes(&self) -> HashSet<&Node>;
     // return the number of (non)terminal nodes in graph.
