@@ -1,7 +1,8 @@
 use {
     ddir::{
-        bdd::{BinaryDecisionDiagram, ToBinaryDecisionDiagram, BDD},
-        dd::{example, DecisionDiagramTrait, DDT},
+        bdd::{ToBinaryDecisionDiagram, BDD},
+        dd::{DecisionDiagramTrait, ReducedDecisionDiagram},
+        ddt::{example, DDT},
     },
     std::fs::File,
 };
