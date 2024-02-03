@@ -1,5 +1,6 @@
+//! Element type for Decision Diagrams
 use {
-    crate::types::DecisionDiagram,
+    crate::types::{DecisionDiagram, DecisionDiagramNode},
     std::{
         collections::{HashMap, HashSet},
         hash::Hash,
@@ -9,17 +10,6 @@ use {
 };
 
 pub type Node = Rc<Vertex>;
-
-pub trait DecisionDiagramNode {
-    fn new_constant(b: bool) -> Self;
-    fn new_var(var_index: usize, low: Node, high: Node) -> Self;
-    fn is_constant(&self) -> Option<bool>;
-    // return 0 or 1 for terminal nodes, and `vi + 2` for nonterminal node which var_index is `vi`.
-    fn unified_key(&self) -> usize;
-    fn var_index(&self) -> Option<usize>;
-    fn low(&self) -> Option<&Self>;
-    fn high(&self) -> Option<&Self>;
-}
 
 #[derive(Clone, Debug)]
 pub enum Vertex {
@@ -157,11 +147,11 @@ impl DecisionDiagram for Node {
 
 impl DecisionDiagramNode for Node {
     /// returns a new terminal node.
-    fn new_constant(b: bool) -> Self {
+    fn new_constant(b: bool) -> Node {
         Rc::new(Vertex::Bool(b))
     }
     /// returns a new non-terminal node.
-    fn new_var(var_index: usize, low: Node, high: Node) -> Self {
+    fn new_var(var_index: usize, low: Node, high: Node) -> Node {
         Rc::new(Vertex::Var {
             var_index,
             low,
@@ -203,13 +193,13 @@ impl DecisionDiagramNode for Node {
             Vertex::Var { var_index, .. } => Some(var_index),
         }
     }
-    fn low(&self) -> Option<&Self> {
+    fn low(&self) -> Option<&Node> {
         match **self {
             Vertex::Bool(_) => None,
             Vertex::Var { ref low, .. } => Some(low),
         }
     }
-    fn high(&self) -> Option<&Self> {
+    fn high(&self) -> Option<&Node> {
         match **self {
             Vertex::Bool(_) => None,
             Vertex::Var { ref high, .. } => Some(high),

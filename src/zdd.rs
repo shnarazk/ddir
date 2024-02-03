@@ -1,3 +1,4 @@
+//! Zero-suppressed Decision Diagram
 use {
     crate::{
         node::Node,

@@ -1,7 +1,8 @@
+//! Binary Decision Diagram
 use {
     crate::{
-        node::{DecisionDiagramNode, Node, Vertex},
-        types::{BooleanOperator, DecisionDiagram, ReducedDecisionDiagram},
+        node::{Node, Vertex},
+        types::{BooleanOperator, DecisionDiagram, DecisionDiagramNode, ReducedDecisionDiagram},
     },
     itertools::Itertools,
     std::{
@@ -260,8 +261,8 @@ impl ReducedDecisionDiagram for BDD {
 mod test {
     use crate::{
         bdd::BDD,
-        node::{DecisionDiagramNode, Node},
-        types::DecisionDiagram,
+        node::Node,
+        types::{DecisionDiagram, DecisionDiagramNode},
     };
 
     #[test]
