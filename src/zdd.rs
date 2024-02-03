@@ -1,7 +1,7 @@
 use {
     crate::{
-        dd::{DecisionDiagram, ReducedDecisionDiagram},
         node::Node,
+        types::{DecisionDiagram, ReducedDecisionDiagram},
     },
     std::{collections::HashSet, io, marker::PhantomData},
 };
@@ -24,6 +24,7 @@ impl ZDD {
 }
 
 impl DecisionDiagram for ZDD {
+    type Element = Node;
     fn all_nodes(&self) -> HashSet<&Node> {
         self.graph.all_nodes()
     }

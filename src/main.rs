@@ -1,8 +1,8 @@
 use {
     ddir::{
         bdd::BDD,
-        dd::{DecisionDiagram, ReducedDecisionDiagram},
         node::{example, Node},
+        types::{DecisionDiagram, ReducedDecisionDiagram},
     },
     std::fs::File,
 };

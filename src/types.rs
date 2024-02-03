@@ -1,7 +1,6 @@
-use {
-    crate::node::Node,
-    std::{collections::HashSet, io},
-};
+use std::{collections::HashSet, io};
+
+pub(crate) type BooleanOperator = (Box<dyn Fn(bool, bool) -> bool>, bool);
 
 pub trait ReducedDecisionDiagram {
     /// convert the current graph to one which is a reduced diagram
@@ -11,8 +10,9 @@ pub trait ReducedDecisionDiagram {
 }
 
 pub trait DecisionDiagram {
+    type Element;
     // return the hashset of all (non)terminal nodes in graph.
-    fn all_nodes(&self) -> HashSet<&Node>;
+    fn all_nodes(&self) -> HashSet<&Self::Element>;
     // return the number of (non)terminal nodes in graph.
     fn len(&self) -> usize;
     fn is_empty(&self) -> bool {

@@ -1,5 +1,5 @@
 use {
-    crate::dd::DecisionDiagram,
+    crate::types::DecisionDiagram,
     std::{
         collections::{HashMap, HashSet},
         hash::Hash,
@@ -52,6 +52,7 @@ impl Default for Vertex {
 }
 
 impl DecisionDiagram for Node {
+    type Element = Node;
     /// returns the number of nodes under self and self itself.
     ///```
     /// use ddir::dd::DecisionDiagram;

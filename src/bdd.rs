@@ -1,7 +1,7 @@
 use {
     crate::{
-        dd::{DecisionDiagram, ReducedDecisionDiagram},
         node::{DecisionDiagramNode, Node, Vertex},
+        types::{BooleanOperator, DecisionDiagram, ReducedDecisionDiagram},
     },
     itertools::Itertools,
     std::{
@@ -10,8 +10,6 @@ use {
         marker::PhantomData,
     },
 };
-
-type BooleanOperator = (Box<dyn Fn(bool, bool) -> bool>, bool);
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct BDD {
@@ -31,6 +29,7 @@ impl BDD {
 }
 
 impl DecisionDiagram for BDD {
+    type Element = Node;
     fn all_nodes(&self) -> HashSet<&Node> {
         self.graph.all_nodes()
     }
@@ -261,8 +260,8 @@ impl ReducedDecisionDiagram for BDD {
 mod test {
     use crate::{
         bdd::BDD,
-        dd::DecisionDiagram,
         node::{DecisionDiagramNode, Node},
+        types::DecisionDiagram,
     };
 
     #[test]
