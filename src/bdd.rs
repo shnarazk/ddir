@@ -45,17 +45,17 @@ impl ReducedDecisionDiagram for BDD<Node> {
     // convert tree to BDD
     fn reduce(&mut self) {
         let root = &self.graph;
-        let mut to_index: HashMap<Node, usize> = HashMap::new();
-        let mut from_index: HashMap<usize, Node> = HashMap::new();
-        from_index.insert(0, Node::new_constant(false));
-        from_index.insert(1, Node::new_constant(true));
+        let mut index: HashMap<Node, usize> = HashMap::new();
+        let mut node: HashMap<usize, Node> = HashMap::new();
+        node.insert(0, Node::new_constant(false));
+        node.insert(1, Node::new_constant(true));
         let mut vlist: HashMap<usize, Vec<&Node>> = HashMap::new();
         // put each vertex u on list vlist[u.var_index]
         for n in root.all_nodes().iter().cloned() {
             let k = n.unified_key();
-            to_index.insert(n.clone(), k);
+            index.insert(n.clone(), k);
             if 1 < k {
-                from_index.insert(k, n.clone());
+                node.insert(k, n.clone());
                 vlist.entry(k).or_default().push(n);
             }
         }
@@ -63,32 +63,32 @@ impl ReducedDecisionDiagram for BDD<Node> {
         for vi in vlist.keys().sorted().rev() {
             let lst = &vlist[vi];
             let mut q: Vec<((usize, usize), &Node)> = Vec::new();
-            for node in lst.iter().cloned() {
-                match **node {
+            for n in lst.iter().cloned() {
+                match **n {
                     Vertex::Bool(_) => (),
                     Vertex::Var {
                         ref low, ref high, ..
                     } => {
-                        if to_index[low] == to_index[high] {
+                        if index[low] == index[high] {
                             // redundant vertex
-                            to_index.insert(node.clone(), to_index[low]);
+                            index.insert(n.clone(), index[low]);
                         } else {
-                            q.push(((to_index[low], to_index[high]), node));
+                            q.push(((index[low], index[high]), n));
                         }
                     }
                 }
             }
             q.sort_unstable_by_key(|(k, _)| *k);
             let mut old_key: (usize, usize) = (usize::MAX, usize::MAX);
-            for (key, node) in q.iter().cloned() {
+            for (key, n) in q.iter().cloned() {
                 if key == old_key {
-                    to_index.insert(node.clone(), next_id);
+                    index.insert(n.clone(), next_id);
                 } else {
                     next_id += 1;
-                    match **node {
+                    match **n {
                         Vertex::Bool(_) => {
-                            to_index.insert(node.clone(), next_id);
-                            from_index.insert(next_id, node.clone());
+                            index.insert(n.clone(), next_id);
+                            node.insert(next_id, n.clone());
                         }
                         Vertex::Var {
                             var_index,
@@ -97,12 +97,12 @@ impl ReducedDecisionDiagram for BDD<Node> {
                         } => {
                             let n = Node::new_var(
                                 var_index,
-                                from_index[&to_index[low]].clone(),
-                                from_index[&to_index[high]].clone(),
+                                node[&index[low]].clone(),
+                                node[&index[high]].clone(),
                             );
-                            to_index.insert(node.clone(), next_id);
-                            to_index.insert(n.clone(), next_id);
-                            from_index.insert(next_id, n);
+                            index.insert(n.clone(), next_id);
+                            index.insert(n.clone(), next_id);
+                            node.insert(next_id, n);
                         }
                     }
                     old_key = key;
@@ -110,68 +110,38 @@ impl ReducedDecisionDiagram for BDD<Node> {
             }
         }
         // pick up a tree from the hash-table
-        self.graph = from_index[&to_index[root]].clone();
+        self.graph = node[&index[root]].clone();
     }
     fn apply(&self, op: Box<dyn Fn(bool, bool) -> bool>, unit: bool, other: &Self) -> BDD<Node> {
-        let mut from_index: HashMap<usize, Node> = HashMap::new();
-        from_index.insert(0, Node::new_constant(false));
-        from_index.insert(1, Node::new_constant(true));
-        let mut to_index: HashMap<Node, usize> = HashMap::new();
-        for (i, node) in self
+        let mut node: HashMap<usize, Node> = HashMap::new();
+        node.insert(0, Node::new_constant(false));
+        node.insert(1, Node::new_constant(true));
+        let mut index: HashMap<Node, usize> = HashMap::new();
+        for (i, n) in self
             .graph
             .all_nodes()
             .iter()
             .chain(other.graph.all_nodes().iter())
             .enumerate()
         {
-            from_index.insert(i + 2, (*node).clone());
-            if let Some(b) = node.is_constant() {
-                to_index.insert((*node).clone(), b as usize);
+            node.insert(i + 2, (*n).clone());
+            if let Some(b) = n.is_constant() {
+                index.insert((*n).clone(), b as usize);
             } else {
-                to_index.insert((*node).clone(), i + 2);
+                index.insert((*n).clone(), i + 2);
             }
         }
         // mapping from index pair to index
         let mut merged: HashMap<(usize, usize), Node> = HashMap::new();
         // mapping from node to bool
         let mut evaluation: HashMap<Node, bool> = HashMap::new();
-        // | unit hashKey value1 value2 value u |
-        //   hashKey := (to_index at: v1) @ (to_index at: v2).
-        //   merged at: hashKey ifPresent: [ :node | node ifNotNil: [ ^ node "have already evaluated" ] ].
-        //   value1 := evaluation at: v1 ifAbsent: [ nil ].
-        //   value2 := evaluation at: v2 ifAbsent: [ nil ].
-        //   "u.value := v1.value <op> v2.value"
-        //   value := (value1 = unit or: [ value2 = unit ]) ifTrue: [ unit ]
-        //                ifFalse: [
-        //                value1 ifNotNil: [ value2 ifNotNil: [ operator value: value1 value: value2 ] ] ].
-        //   u := value ifNil: [
-        //            | v1Index v2Index vlow1 vlow2 vhigh1 vhigh2 w |
-        //            "create a nonterminal vertex and evaluate further down"
-        //            w := DDNode new.
-        //            evaluation at: w put: value.
-        //            v1Index := v1 isLiteral ifTrue: [ v1 ] ifFalse: [ v1 varIndex ].
-        //            v2Index := v2 isLiteral ifTrue: [ v2 ] ifFalse: [ v2 varIndex ].
-        //            w varIndex: (v1 isLiteral ifTrue: [
-        //                     v2 isLiteral ifTrue: [ operator value: v1 value: v2 ] ifFalse: [ v2Index ] ]
-        //                     ifFalse: [
-        //                     v2 isLiteral ifTrue: [ v1Index ] ifFalse: [ v1 varIndex min: v2 varIndex ] ]).
-        //            vlow1 := v1Index = w varIndex ifTrue: [ v1 low ] ifFalse: [ v1 ].
-        //            vlow2 := v2Index = w varIndex ifTrue: [ v2 low ] ifFalse: [ v2 ].
-        //            vhigh1 := v1Index = w varIndex ifTrue: [ v1 high ] ifFalse: [ v1 ].
-        //            vhigh2 := v2Index = w varIndex ifTrue: [ v2 high ] ifFalse: [ v2 ].
-        //            w low: (self apply: operator
-        //                     on: vlow1
-        //                     and: vlow2).
-        //            w high: (self apply: operator
-        //                     on: vhigh1
-        //                     and: vhigh2).
-        //            w ].
-        //   aMapping at: hashKey put: u.
-        //   ^ u
         fn aux(
             operator @ (op, unit): &BooleanOperator,
             (v1, v2): (Node, Node),
-            (to_index, from_index): (&mut HashMap<Node, usize>, &mut HashMap<usize, Node>),
+            indexer @ (to_index, from_index): &(
+                &mut HashMap<Node, usize>,
+                &mut HashMap<usize, Node>,
+            ),
             evaluation: &mut HashMap<Node, bool>,
             merged: &mut HashMap<(usize, usize), Node>,
         ) -> Node {
@@ -213,20 +183,8 @@ impl ReducedDecisionDiagram for BDD<Node> {
                 };
                 Node::new_var(
                     key - 2,
-                    aux(
-                        operator,
-                        (vlow1, vlow2),
-                        (to_index, from_index),
-                        evaluation,
-                        merged,
-                    ),
-                    aux(
-                        operator,
-                        (vhigh1, vhigh2),
-                        (to_index, from_index),
-                        evaluation,
-                        merged,
-                    ),
+                    aux(operator, (vlow1, vlow2), indexer, evaluation, merged),
+                    aux(operator, (vhigh1, vhigh2), indexer, evaluation, merged),
                 )
             };
             if let Some(b) = value {
@@ -239,7 +197,7 @@ impl ReducedDecisionDiagram for BDD<Node> {
             graph: aux(
                 &(op, unit),
                 (self.graph.clone(), other.graph.clone()),
-                (&mut to_index, &mut from_index),
+                &(&mut index, &mut node),
                 &mut evaluation,
                 &mut merged,
             ),

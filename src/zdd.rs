@@ -45,17 +45,17 @@ impl<N: DecisionDiagram<N> + DecisionDiagramNode> DecisionDiagram<N> for ZDD<N> 
 impl ReducedDecisionDiagram for ZDD<Node> {
     fn reduce(&mut self) {
         let root = &self.graph;
-        let mut to_index: HashMap<Node, usize> = HashMap::new();
-        let mut from_index: HashMap<usize, Node> = HashMap::new();
-        from_index.insert(0, Node::new_constant(false));
-        from_index.insert(1, Node::new_constant(true));
+        let mut index: HashMap<Node, usize> = HashMap::new();
+        let mut node: HashMap<usize, Node> = HashMap::new();
+        node.insert(0, Node::new_constant(false));
+        node.insert(1, Node::new_constant(true));
         let mut vlist: HashMap<usize, Vec<&Node>> = HashMap::new();
         // put each vertex u on list vlist[u.var_index]
         for n in root.all_nodes().iter().cloned() {
             let k = n.unified_key();
-            to_index.insert(n.clone(), k);
+            index.insert(n.clone(), k);
             if 1 < k {
-                from_index.insert(k, n.clone());
+                node.insert(k, n.clone());
                 vlist.entry(k).or_default().push(n);
             }
         }
@@ -68,26 +68,26 @@ impl ReducedDecisionDiagram for ZDD<Node> {
                     Vertex::Var {
                         ref low, ref high, ..
                     } => {
-                        if to_index[high] == 0 {
+                        if index[high] == 0 {
                             // redundant vertex
-                            to_index.insert(node.clone(), to_index[low]);
+                            index.insert(node.clone(), index[low]);
                         } else {
-                            q.push(((to_index[low], to_index[high]), node));
+                            q.push(((index[low], index[high]), node));
                         }
                     }
                 }
             }
             q.sort_unstable_by_key(|(k, _)| *k);
             let mut old_key: (usize, usize) = (usize::MAX, usize::MAX);
-            for (key, node) in q.iter().cloned() {
+            for (key, n) in q.iter().cloned() {
                 if key == old_key {
-                    to_index.insert(node.clone(), next_id);
+                    index.insert(n.clone(), next_id);
                 } else {
                     next_id += 1;
-                    match **node {
+                    match **n {
                         Vertex::Bool(_) => {
-                            to_index.insert(node.clone(), next_id);
-                            from_index.insert(next_id, node.clone());
+                            index.insert(n.clone(), next_id);
+                            node.insert(next_id, n.clone());
                         }
                         Vertex::Var {
                             var_index,
@@ -96,12 +96,12 @@ impl ReducedDecisionDiagram for ZDD<Node> {
                         } => {
                             let n = Node::new_var(
                                 var_index,
-                                from_index[&to_index[low]].clone(),
-                                from_index[&to_index[high]].clone(),
+                                node[&index[low]].clone(),
+                                node[&index[high]].clone(),
                             );
-                            to_index.insert(node.clone(), next_id);
-                            to_index.insert(n.clone(), next_id);
-                            from_index.insert(next_id, n);
+                            index.insert(n.clone(), next_id);
+                            index.insert(n.clone(), next_id);
+                            node.insert(next_id, n);
                         }
                     }
                     old_key = key;
@@ -109,7 +109,7 @@ impl ReducedDecisionDiagram for ZDD<Node> {
             }
         }
         // pick up a tree from the hash-table
-        self.graph = from_index[&to_index[root]].clone();
+        self.graph = node[&index[root]].clone();
     }
     fn apply(&self, _op: Box<dyn Fn(bool, bool) -> bool>, _unit: bool, _other: &Self) -> Self {
         unimplemented!()
