@@ -3,6 +3,7 @@ use {
         bdd::BDD,
         node::{example, Node},
         types::{DecisionDiagram, ReducedDecisionDiagram},
+        zdd::ZDD,
     },
     std::fs::File,
 };
@@ -17,10 +18,14 @@ macro_rules! dump {
 }
 
 fn main() {
-    let idepend: Node = dump!(example::independent_set(), "ind-tree.gv");
-    dump!(BDD::new_from(idepend), "ind-bdd.gv");
+    let independ: Node = dump!(example::independent_set(), "ind-tree.gv");
+    // dump!(BDD::new_from(independ.clone()), "ind-bdd.gv");
+    dump!(ZDD::new_from(independ), "ind-zdd.gv");
+
     let majority: Node = dump!(example::majority(), "maj-tree.gv");
-    dump!(BDD::new_from(majority), "maj-bdd.gv");
+    // dump!(BDD::new_from(majority.clone()), "maj-bdd.gv");
+    dump!(ZDD::new_from(majority), "maj-zdd.gv");
+
     let x1x3: BDD<Node> = dump!(BDD::new_from(example::x1x3()), "x1x3-bdd.gv");
     let x2x3: BDD<Node> = dump!(BDD::new_from(example::x2x3()), "x2x3-bdd.gv");
     dump!(
