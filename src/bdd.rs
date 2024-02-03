@@ -248,6 +248,19 @@ impl ReducedDecisionDiagram for BDD<Node> {
         applied.reduce();
         applied
     }
+    /// return a new diagram by composing this and other
+    fn compose(&self, other: &Self, _at: usize) -> Self {
+        let v1 = self.graph.clone();
+        let v2 = other.graph.clone();
+        BDD {
+            graph: compose_aux(&v1, &v1, &v2),
+            ..Default::default()
+        }
+    }
+}
+
+fn compose_aux(_low: &Node, _high: &Node, _other: &Node) -> Node {
+    unimplemented!()
 }
 
 #[cfg(test)]

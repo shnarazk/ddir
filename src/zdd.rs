@@ -112,6 +112,9 @@ impl ReducedDecisionDiagram for ZDD<Node> {
         self.graph = from_index[&to_index[root]].clone();
     }
     fn apply(&self, _op: Box<dyn Fn(bool, bool) -> bool>, _unit: bool, _other: &Self) -> Self {
-        todo!()
+        unimplemented!()
+    }
+    fn compose(&self, _other: &Self, _at: usize) -> Self {
+        unimplemented!()
     }
 }
