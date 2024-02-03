@@ -353,6 +353,71 @@ pub mod example {
         )
     }
 
+    /// maximal independent subsets, is also called kernels.
+    ///  the kernels correspond to such arrangements in which there also are no three consecutive 0s.
+    pub fn kernels() -> Node {
+        D!(
+            1,
+            D!(
+                2,
+                D!(
+                    3,
+                    D!(
+                        4,
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!())),
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!()))
+                    ),
+                    D!(
+                        4,
+                        D!(5, D!(6, F!(), T!()), D!(6, F!(), F!())),
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!()))
+                    )
+                ),
+                D!(
+                    3,
+                    D!(
+                        4,
+                        D!(5, D!(6, F!(), F!()), D!(6, T!(), F!())),
+                        D!(5, D!(6, F!(), T!()), D!(6, F!(), F!()))
+                    ),
+                    D!(
+                        4,
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!())),
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!()))
+                    )
+                )
+            ),
+            D!(
+                2,
+                D!(
+                    3,
+                    D!(
+                        4,
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!())),
+                        D!(5, D!(6, T!(), F!()), D!(6, F!(), F!()))
+                    ),
+                    D!(
+                        4,
+                        D!(5, D!(6, F!(), F!()), D!(6, T!(), F!())),
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!()))
+                    )
+                ),
+                D!(
+                    3,
+                    D!(
+                        4,
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!())),
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!()))
+                    ),
+                    D!(
+                        4,
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!())),
+                        D!(5, D!(6, F!(), F!()), D!(6, F!(), F!()))
+                    )
+                )
+            )
+        )
+    }
     /// majority
     pub fn majority() -> Node {
         D!(

@@ -19,11 +19,15 @@ macro_rules! dump {
 
 fn main() {
     let independ: Node = dump!(example::independent_set(), "ind-tree.gv");
-    // dump!(BDD::new_from(independ.clone()), "ind-bdd.gv");
+    dump!(BDD::new_from(independ.clone()), "ind-bdd.gv");
     dump!(ZDD::new_from(independ), "ind-zdd.gv");
 
+    let kernels: Node = dump!(example::kernels(), "krn-tree.gv");
+    dump!(BDD::new_from(kernels.clone()), "krn-bdd.gv");
+    dump!(ZDD::new_from(kernels), "krn-zdd.gv");
+
     let majority: Node = dump!(example::majority(), "maj-tree.gv");
-    // dump!(BDD::new_from(majority.clone()), "maj-bdd.gv");
+    dump!(BDD::new_from(majority.clone()), "maj-bdd.gv");
     dump!(ZDD::new_from(majority), "maj-zdd.gv");
 
     let x1x3: BDD<Node> = dump!(BDD::new_from(example::x1x3()), "x1x3-bdd.gv");
