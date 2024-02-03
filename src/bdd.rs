@@ -62,7 +62,7 @@ impl ReducedDecisionDiagram for BDD<Node> {
         }
         let mut next_id: usize = 2;
         for vi in vlist.keys().sorted().rev() {
-            let lst = vlist.get(vi).unwrap();
+            let lst = &vlist[vi];
             let mut q: Vec<((usize, usize), &Node)> = Vec::new();
             let mut old_key: (usize, usize) = (0, 0);
             for node in lst.iter().cloned() {
@@ -73,12 +73,9 @@ impl ReducedDecisionDiagram for BDD<Node> {
                     } => {
                         if to_index.get(low) == to_index.get(high) {
                             // redundant vertex
-                            to_index.insert(node.clone(), *to_index.get(low).unwrap());
+                            to_index.insert(node.clone(), to_index[low]);
                         } else {
-                            q.push((
-                                (*to_index.get(low).unwrap(), *to_index.get(high).unwrap()),
-                                node,
-                            ));
+                            q.push(((to_index[low], to_index[high]), node));
                         }
                     }
                 }
@@ -99,13 +96,12 @@ impl ReducedDecisionDiagram for BDD<Node> {
                             ref low,
                             ref high,
                         } => {
-                            let l = from_index.get(to_index.get(low).unwrap()).unwrap();
-                            let h = from_index.get(to_index.get(high).unwrap()).unwrap();
+                            let l = &from_index[&to_index[low]];
+                            let h = &from_index[&to_index[high]];
                             let n = Node::new_var(var_index, (*l).clone(), (*h).clone());
                             to_index.insert(node.clone(), next_id);
                             to_index.insert(n.clone(), next_id);
                             from_index.insert(next_id, n);
-                            // Rc::get_mut(&mut **node);
                         }
                     }
                     old_key = key;
@@ -113,10 +109,7 @@ impl ReducedDecisionDiagram for BDD<Node> {
             }
         }
         // pick up a tree from the hash-table
-        self.graph = from_index
-            .get(to_index.get(&root).unwrap())
-            .unwrap()
-            .clone();
+        self.graph = from_index[&to_index[&root]].clone();
     }
     fn apply(&self, op: Box<dyn Fn(bool, bool) -> bool>, unit: bool, other: &Self) -> BDD<Node> {
         let mut from_index: HashMap<usize, Node> = HashMap::new();
@@ -181,7 +174,7 @@ impl ReducedDecisionDiagram for BDD<Node> {
             evaluation: &mut HashMap<Node, bool>,
             merged: &mut HashMap<(usize, usize), Node>,
         ) -> Node {
-            let hash_key = (*to_index.get(&v1).unwrap(), *to_index.get(&v2).unwrap());
+            let hash_key = (to_index[&v1], to_index[&v2]);
             if let Some(n) = merged.get(&hash_key) {
                 return n.clone(); // have already evaluaten
             }
@@ -194,7 +187,7 @@ impl ReducedDecisionDiagram for BDD<Node> {
                 (Some(a), Some(b)) => Some(op(*a, *b)),
             };
             if let Some(b) = value {
-                return from_index.get(&(b as usize)).unwrap().clone();
+                return from_index[&(b as usize)].clone();
             }
             let v1key = v1.unified_key();
             let v2key = v2.unified_key();
