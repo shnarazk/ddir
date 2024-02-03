@@ -26,13 +26,13 @@ fn main() {
         .write_as_gv(f4)
         .expect("fail to serialize");
 
-    let x1x3: BDD = BDD::new_from(example::x1x3());
+    let x1x3: BDD<Node> = BDD::new_from(example::x1x3());
     let x1x3f = File::create("x1x2-bdd.gv").expect("fail to create");
     x1x3.write_as_gv(x1x3f).expect("fail to save");
-    let x2x3: BDD = BDD::new_from(example::x2x3());
+    let x2x3: BDD<Node> = BDD::new_from(example::x2x3());
     let x2x3f = File::create("x2x3-bdd.gv").expect("fail to create");
     x2x3.write_as_gv(x2x3f).expect("fail to save");
-    let applied: BDD = x1x3.apply(Box::new(|a, b| a | b), true, &x2x3);
+    let applied: BDD<Node> = x1x3.apply(Box::new(|a, b| a | b), true, &x2x3);
     let applyf = File::create("apply-bdd.gv").expect("fail to create");
     applied.write_as_gv(applyf).expect("fail to save");
 }

@@ -13,13 +13,13 @@ use {
 };
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
-pub struct BDD {
-    graph: Node,
+pub struct BDD<N: DecisionDiagramNode> {
+    graph: N,
     phantom: PhantomData<()>,
 }
 
-impl BDD {
-    pub fn new_from(graph: Node) -> BDD {
+impl BDD<Node> {
+    pub fn new_from(graph: Node) -> Self {
         let mut bdd = BDD {
             graph: graph.clone(),
             ..Default::default()
@@ -29,9 +29,8 @@ impl BDD {
     }
 }
 
-impl DecisionDiagram for BDD {
-    type Element = Node;
-    fn all_nodes(&self) -> HashSet<&Node> {
+impl<N: DecisionDiagram<N> + DecisionDiagramNode> DecisionDiagram<N> for BDD<N> {
+    fn all_nodes(&self) -> HashSet<&N> {
         self.graph.all_nodes()
     }
     fn len(&self) -> usize {
@@ -42,7 +41,7 @@ impl DecisionDiagram for BDD {
     }
 }
 
-impl ReducedDecisionDiagram for BDD {
+impl ReducedDecisionDiagram for BDD<Node> {
     // convert tree to BDD
     fn reduce(&mut self) {
         let root = self.graph.clone();
@@ -119,7 +118,7 @@ impl ReducedDecisionDiagram for BDD {
             .unwrap()
             .clone();
     }
-    fn apply(&self, op: Box<dyn Fn(bool, bool) -> bool>, unit: bool, other: &Self) -> BDD {
+    fn apply(&self, op: Box<dyn Fn(bool, bool) -> bool>, unit: bool, other: &Self) -> BDD<Node> {
         let mut from_index: HashMap<usize, Node> = HashMap::new();
         from_index.insert(0, Node::new_constant(false));
         from_index.insert(1, Node::new_constant(true));
@@ -269,7 +268,7 @@ mod test {
     fn test() {
         let f = Node::new_constant(false);
         let n: Node = Node::new_var(2, f.clone(), f.clone());
-        let bdd: BDD = BDD::new_from(n);
+        let bdd: BDD<Node> = BDD::new_from(n);
         assert_eq!(bdd.len(), 1);
     }
 }

@@ -1,20 +1,21 @@
 //! Zero-suppressed Decision Diagram
+
 use {
     crate::{
         node::Node,
-        types::{DecisionDiagram, ReducedDecisionDiagram},
+        types::{DecisionDiagram, DecisionDiagramNode, ReducedDecisionDiagram},
     },
     std::{collections::HashSet, io, marker::PhantomData},
 };
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
-pub struct ZDD {
-    graph: Node,
+pub struct ZDD<N> {
+    graph: N,
     phantom: PhantomData<()>,
 }
 
-impl ZDD {
-    pub fn new_from(graph: Node) -> ZDD {
+impl ZDD<Node> {
+    pub fn new_from(graph: Node) -> ZDD<Node> {
         let mut zdd = ZDD {
             graph: graph.clone(),
             ..Default::default()
@@ -24,9 +25,8 @@ impl ZDD {
     }
 }
 
-impl DecisionDiagram for ZDD {
-    type Element = Node;
-    fn all_nodes(&self) -> HashSet<&Node> {
+impl<N: DecisionDiagram<N> + DecisionDiagramNode> DecisionDiagram<N> for ZDD<N> {
+    fn all_nodes(&self) -> HashSet<&N> {
         self.graph.all_nodes()
     }
     fn len(&self) -> usize {
@@ -37,7 +37,7 @@ impl DecisionDiagram for ZDD {
     }
 }
 
-impl ReducedDecisionDiagram for ZDD {
+impl ReducedDecisionDiagram for ZDD<Node> {
     fn reduce(&mut self) {
         todo!()
     }

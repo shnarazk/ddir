@@ -1,12 +1,11 @@
 //! Types and traits
-use std::{collections::HashSet, io};
+use std::{collections::HashSet, hash::Hash, io};
 
 pub(crate) type BooleanOperator = (Box<dyn Fn(bool, bool) -> bool>, bool);
 
-pub trait DecisionDiagram {
-    type Element;
+pub trait DecisionDiagram<N: DecisionDiagramNode> {
     // return the hashset of all (non)terminal nodes in graph.
-    fn all_nodes(&self) -> HashSet<&Self::Element>;
+    fn all_nodes(&self) -> HashSet<&N>;
     // return the number of (non)terminal nodes in graph.
     fn len(&self) -> usize;
     fn is_empty(&self) -> bool {
@@ -16,16 +15,19 @@ pub trait DecisionDiagram {
     fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()>;
 }
 
-pub trait DecisionDiagramNode {
-    // return a new terminal node
+pub trait DecisionDiagramNode: Clone + Default + Eq + Hash {
+    /// return a new terminal node
     fn new_constant(b: bool) -> Self;
-    // return a new non-terminal node
+    /// return a new non-terminal node
     fn new_var(var_index: usize, low: Self, high: Self) -> Self;
     fn is_constant(&self) -> Option<bool>;
-    // return 0 or 1 for terminal nodes, and `vi + 2` for nonterminal node which var_index is `vi`.
+    /// return 0 or 1 for terminal nodes, and `vi + 2` for nonterminal node which var_index is `vi`.
     fn unified_key(&self) -> usize;
+    /// return the decision var
     fn var_index(&self) -> Option<usize>;
+    /// return the node element for the decision var == false
     fn low(&self) -> Option<&Self>;
+    /// return the node element for the decision var == true
     fn high(&self) -> Option<&Self>;
 }
 

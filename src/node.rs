@@ -41,12 +41,11 @@ impl Default for Vertex {
     }
 }
 
-impl DecisionDiagram for Node {
-    type Element = Node;
+impl DecisionDiagram<Node> for Node {
     /// returns the number of nodes under self and self itself.
     ///```
-    /// use ddir::dd::DecisionDiagram;
-    /// use ddir::node::{DecisionDiagramNode, Node};
+    /// use ddir::node::Node;
+    /// use ddir::types::{DecisionDiagram, DecisionDiagramNode};
     ///
     /// let f = Node::new_constant(false);
     /// assert_eq!(f.len(), 1);
@@ -60,8 +59,8 @@ impl DecisionDiagram for Node {
     }
     /// returns all nodes under self and self itself.
     ///```
-    /// use ddir::dd::DecisionDiagram;
-    /// use ddir::node::{DecisionDiagramNode, Node};
+    /// use ddir::node::Node;
+    /// use ddir::types::{DecisionDiagram, DecisionDiagramNode};
     ///
     /// let f = Node::new_constant(false);
     /// let n = Node::new_var(2, f.clone(), f.clone());
@@ -160,8 +159,8 @@ impl DecisionDiagramNode for Node {
     }
     /// returns `None` if self is a non-terminal node.
     ///```
-    /// use ddir::dd::DecisionDiagram;
-    /// use ddir::node::{DecisionDiagramNode, Node};
+    /// use ddir::node::Node;
+    /// use ddir::types::{DecisionDiagram, DecisionDiagramNode};
     ///
     /// let f = Node::new_constant(false);
     /// assert!(f.is_constant().is_some());
@@ -180,8 +179,8 @@ impl DecisionDiagramNode for Node {
     }
     /// returns the number of nodes under self and self itself.
     ///```
-    /// use ddir::dd::DecisionDiagram;
-    /// use ddir::node::{DecisionDiagramNode, Node};
+    /// use ddir::node::Node;
+    /// use ddir::types::{DecisionDiagram, DecisionDiagramNode};
     ///
     /// let f = Node::new_constant(false);
     /// let n = Node::new_var(2, f.clone(), f.clone());
