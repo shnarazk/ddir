@@ -2,7 +2,9 @@
 use {
     crate::{
         node::{Node, Vertex},
-        types::{BooleanOperator, DecisionDiagram, DecisionDiagramNode, ReducedDecisionDiagram},
+        types::{
+            BooleanOperator, DecisionDiagram, DecisionDiagramNode, Indexer, ReducedDecisionDiagram,
+        },
     },
     itertools::Itertools,
     std::{
@@ -211,18 +213,76 @@ impl ReducedDecisionDiagram for BDD<Node> {
         applied
     }
     /// return a new diagram by composing this and other
-    fn compose(&self, other: &Self, _at: usize) -> Self {
+    fn compose(&self, other: &Self, var_index: usize) -> Self {
         let v1 = self.graph.clone();
         let v2 = other.graph.clone();
-        BDD {
-            graph: compose_aux(&v1, &v1, &v2),
-            ..Default::default()
+        let mut node: HashMap<usize, Node> = HashMap::new();
+        node.insert(0, Node::new_constant(false));
+        node.insert(1, Node::new_constant(true));
+        let mut index: HashMap<Node, usize> = HashMap::new();
+        for (i, n) in self
+            .graph
+            .all_nodes()
+            .iter()
+            .chain(other.graph.all_nodes().iter())
+            .enumerate()
+        {
+            node.insert(i + 2, (*n).clone());
+            if let Some(b) = n.is_constant() {
+                index.insert((*n).clone(), b as usize);
+            } else {
+                index.insert((*n).clone(), i + 2);
+            }
         }
+        let mut links: HashMap<(usize, usize, usize), Node> = HashMap::new();
+        let index: HashMap<Node, usize> = HashMap::new();
+        let node: HashMap<usize, Node> = HashMap::new();
+        let mut values: HashMap<Node, bool> = HashMap::new();
+        BDD::new_from(compose_aux(
+            &v1,
+            &v1,
+            &v2,
+            var_index,
+            &mut (index, node),
+            &mut links,
+            &mut values,
+        ))
     }
 }
 
-fn compose_aux(_low: &Node, _high: &Node, _other: &Node) -> Node {
-    unimplemented!()
+fn compose_aux(
+    low: &Node,
+    high: &Node,
+    other: &Node,
+    control: usize,
+    (index, node): &mut Indexer<Node>,
+    links: &mut HashMap<(usize, usize, usize), Node>,
+    values: &mut HashMap<Node, bool>,
+) -> Node {
+    // let nodes = vec![low, high, other];
+    let hash_key = (index[low], index[high], index[other]);
+    let vlow1 = if low.var_index() == Some(control) {
+        low.low().unwrap()
+    } else {
+        low
+    };
+    let vhigh1 = if high.var_index() == Some(control) {
+        high.high().unwrap()
+    } else {
+        high
+    };
+    if let Some(evaluated) = links.get(&hash_key) {
+        return evaluated.clone();
+    }
+    if let (Some(bl), Some(bh), Some(b2)) =
+        (values.get(vlow1), values.get(vhigh1), values.get(other))
+    {
+        let val = ((!b2) & bl) | (b2 & bh);
+        links.insert(hash_key, node[&(val as usize)].clone());
+        todo!()
+    } else {
+        todo!()
+    };
 }
 
 #[cfg(test)]

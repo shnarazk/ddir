@@ -1,7 +1,12 @@
 //! Types and traits
-use std::{collections::HashSet, hash::Hash, io};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+    io,
+};
 
 pub(crate) type BooleanOperator = (Box<dyn Fn(bool, bool) -> bool>, bool);
+pub(crate) type Indexer<N> = (HashMap<N, usize>, HashMap<usize, N>);
 
 pub trait DecisionDiagram<N: DecisionDiagramNode> {
     // return the hashset of all (non)terminal nodes in graph.
