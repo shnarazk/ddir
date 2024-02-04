@@ -238,13 +238,17 @@ fn compose_aux(
     if let Some(evaluated) = links.get(&hash_key) {
         return evaluated.clone();
     }
-    if let (Some(bl), Some(bh), Some(b2)) =
-        (values.get(vlow1), values.get(vhigh1), values.get(other))
-    {
+    if let (Some(bl), Some(bh), Some(b2)) = (
+        values.get(&node[&index[vlow1]]),
+        values.get(&node[&index[vhigh1]]),
+        values.get(&node[&index[other]]),
+    ) {
+        // create terminal vertex
         let val = ((!b2) & bl) | (b2 & bh);
         links.insert(hash_key, node[&(val as usize)].clone());
         node[&(val as usize)].clone()
     } else {
+        // create nonterminal vertex and evaluate further down
         let Some(k) = [low.unified_key(), high.unified_key(), other.unified_key()]
             .iter()
             .filter(|n| 1 < **n)
@@ -270,6 +274,7 @@ fn compose_aux(
         };
         let l = compose_aux((vll1, vhl1, vl2), control, index, node, links, values);
         let h = compose_aux((vlh1, vhh1, vh2), control, index, node, links, values);
+        assert!(1 < k);
         let u = Node::new_var(k - 2, l, h);
         links.insert(hash_key, u.clone());
         u

@@ -460,4 +460,7 @@ pub mod example {
     pub fn x2x3() -> Node {
         D!(2, F!(), D!(3, F!(), T!()))
     }
+    pub fn x1x2x4() -> Node {
+        D!(1, D!(2, T!(), D!(4, T!(), F!())), D!(2, F!(), T!()))
+    }
 }

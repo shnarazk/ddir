@@ -36,4 +36,6 @@ fn main() {
         x1x3.apply(Box::new(|a, b| a | b), true, &x2x3),
         "apply-bdd.gv"
     );
+    let x1x2x4: BDD<Node> = dump!(BDD::new_from(example::x1x2x4()), "x1x2x4-bdd.gv");
+    dump!(x1x2x4.compose(&x2x3, 2), "composed.gv");
 }
