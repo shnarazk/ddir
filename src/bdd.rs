@@ -202,12 +202,13 @@ impl ReducedDecisionDiagram for BDD<Node> {
         let mut indexer = Node::build_indexer(&[v1.clone(), v2.clone()]);
         let mut links: HashMap<(usize, usize, usize), Node> = HashMap::new();
         let mut values: HashMap<Node, bool> = HashMap::new();
+        values.insert(indexer.1[&0].clone(), false);
+        values.insert(indexer.1[&1].clone(), true);
         BDD::new_from(compose_aux(
-            &v1,
-            &v1,
-            &v2,
+            (&v1, &v1, &v2),
             var_index,
-            &mut indexer,
+            &mut indexer.0,
+            &mut indexer.1,
             &mut links,
             &mut values,
         ))
@@ -215,11 +216,10 @@ impl ReducedDecisionDiagram for BDD<Node> {
 }
 
 fn compose_aux(
-    low: &Node,
-    high: &Node,
-    other: &Node,
+    (low, high, other): (&Node, &Node, &Node),
     control: usize,
-    (index, node): &mut Indexer<Node>,
+    index: &mut HashMap<Node, usize>,
+    node: &mut HashMap<usize, Node>,
     links: &mut HashMap<(usize, usize, usize), Node>,
     values: &mut HashMap<Node, bool>,
 ) -> Node {
@@ -243,10 +243,37 @@ fn compose_aux(
     {
         let val = ((!b2) & bl) | (b2 & bh);
         links.insert(hash_key, node[&(val as usize)].clone());
-        todo!()
+        node[&(val as usize)].clone()
     } else {
-        todo!()
-    };
+        let Some(k) = [low.unified_key(), high.unified_key(), other.unified_key()]
+            .iter()
+            .filter(|n| 1 < **n)
+            .copied()
+            .min()
+        else {
+            panic!();
+        };
+        let (vll1, vlh1) = if Some(k) == vlow1.var_index() {
+            (vlow1.low().unwrap(), vlow1.high().unwrap())
+        } else {
+            (vlow1, vlow1)
+        };
+        let (vhl1, vhh1) = if Some(k) == vhigh1.var_index() {
+            (vhigh1.low().unwrap(), vhigh1.high().unwrap())
+        } else {
+            (vhigh1, vhigh1)
+        };
+        let (vl2, vh2) = if Some(k) == other.var_index() {
+            (other.low().unwrap(), other.high().unwrap())
+        } else {
+            (other, other)
+        };
+        let l = compose_aux((vll1, vhl1, vl2), control, index, node, links, values);
+        let h = compose_aux((vlh1, vhh1, vh2), control, index, node, links, values);
+        let u = Node::new_var(k - 2, l, h);
+        links.insert(hash_key, u.clone());
+        u
+    }
 }
 
 #[cfg(test)]
