@@ -45,19 +45,23 @@ impl<N: DecisionDiagram<N> + DecisionDiagramNode> DecisionDiagram<N> for ZDD<N> 
 impl ReducedDecisionDiagram for ZDD<Node> {
     fn reduce(&mut self) {
         let root = &self.graph;
-        let mut index: HashMap<Node, usize> = HashMap::new();
         let mut node: HashMap<usize, Node> = HashMap::new();
-        node.insert(0, Node::new_constant(false));
-        node.insert(1, Node::new_constant(true));
+        let mut index: HashMap<Node, usize> = HashMap::new();
+        {
+            let f = Node::new_constant(false);
+            let t = Node::new_constant(true);
+            node.insert(0, f.clone());
+            index.insert(f, 0);
+            node.insert(1, t.clone());
+            index.insert(t, 1);
+        }
         let mut vlist: HashMap<usize, Vec<&Node>> = HashMap::new();
         // put each vertex u on list vlist[u.var_index]
-        for n in root.all_nodes().iter().cloned() {
+        for (i, n) in root.all_nodes().iter().cloned().enumerate() {
+            node.insert(i + 2, n.clone());
             let k = n.unified_key();
-            index.insert(n.clone(), k);
-            if 1 < k {
-                node.insert(k, n.clone());
-                vlist.entry(k).or_default().push(n);
-            }
+            index.insert(n.clone(), if 1 < k { k } else { i + 2 });
+            vlist.entry(k).or_default().push(n);
         }
         let mut next_id: usize = 2;
         for vi in vlist.keys().sorted().rev() {
