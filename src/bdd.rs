@@ -47,29 +47,18 @@ impl ReducedDecisionDiagram for BDD<Node> {
     // convert tree to BDD
     fn reduce(&mut self) {
         let root = &self.graph;
-        let mut index: HashMap<Node, usize> = HashMap::new();
-        let mut node: HashMap<usize, Node> = HashMap::new();
-        {
-            let f = Node::new_constant(false);
-            let t = Node::new_constant(true);
-            node.insert(0, f.clone());
-            index.insert(f, 0);
-            node.insert(1, t.clone());
-            index.insert(t, 1);
-        }
+        let (mut index, mut node) = Node::build_indexer(&[root.clone()]);
         let mut vlist: HashMap<usize, Vec<&Node>> = HashMap::new();
         // put each vertex u on list vlist[u.var_index]
-        for (i, n) in root.all_nodes().iter().cloned().enumerate() {
-            node.insert(i + 2, n.clone());
-            let k = n.unified_key();
-            index.insert(n.clone(), if 1 < k { k } else { i + 2 });
-            vlist.entry(k).or_default().push(n);
+        for n in root.all_nodes().iter().cloned() {
+            if let Some(vi) = n.var_index() {
+                vlist.entry(vi).or_default().push(n);
+            }
         }
-        let mut next_id: usize = 2;
+        let mut next_id: usize = index.len();
         for vi in vlist.keys().sorted().rev() {
-            let lst = &vlist[vi];
             let mut q: Vec<((usize, usize), &Node)> = Vec::new();
-            for n in lst.iter().cloned() {
+            for n in vlist[vi].iter().cloned() {
                 match **n {
                     Vertex::Bool(_) => (),
                     Vertex::Var {
@@ -101,14 +90,14 @@ impl ReducedDecisionDiagram for BDD<Node> {
                             ref low,
                             ref high,
                         } => {
-                            let n = Node::new_var(
+                            let nn = Node::new_var(
                                 var_index,
                                 node[&index[low]].clone(),
                                 node[&index[high]].clone(),
                             );
                             index.insert(n.clone(), next_id);
-                            index.insert(n.clone(), next_id);
-                            node.insert(next_id, n);
+                            index.insert(nn.clone(), next_id);
+                            node.insert(next_id, nn);
                         }
                     }
                     old_key = key;
@@ -116,38 +105,13 @@ impl ReducedDecisionDiagram for BDD<Node> {
             }
         }
         // pick up a tree from the hash-table
-        self.graph = node[&index[root]].clone();
+        self.graph = node[&next_id].clone();
     }
     fn apply(&self, op: Box<dyn Fn(bool, bool) -> bool>, unit: bool, other: &Self) -> BDD<Node> {
-        let mut node: HashMap<usize, Node> = HashMap::new();
-        let mut index: HashMap<Node, usize> = HashMap::new();
-        {
-            let f = Node::new_constant(false);
-            let t = Node::new_constant(true);
-            node.insert(0, f.clone());
-            index.insert(f, 0);
-            node.insert(1, t.clone());
-            index.insert(t, 1);
-        }
-        for (i, n) in self
-            .graph
-            .all_nodes()
-            .iter()
-            .chain(other.graph.all_nodes().iter())
-            .enumerate()
-        {
-            node.insert(i + 2, (*n).clone());
-            let k = n.unified_key();
-            index.insert((*n).clone(), if 1 < k { k } else { i + 2 });
-        }
-        // mapping from index pair to index
-        let mut merged: HashMap<(usize, usize), Node> = HashMap::new();
-        // mapping from node to bool
-        let mut evaluation: HashMap<Node, bool> = HashMap::new();
         fn aux(
             operator @ (op, unit): &BooleanOperator,
             (v1, v2): (Node, Node),
-            indexer @ (index, node): &(&mut HashMap<Node, usize>, &mut HashMap<usize, Node>),
+            indexer @ (index, node): &Indexer<Node>,
             evaluation: &mut HashMap<Node, bool>,
             merged: &mut HashMap<(usize, usize), Node>,
         ) -> Node {
@@ -199,11 +163,15 @@ impl ReducedDecisionDiagram for BDD<Node> {
             merged.insert(hash_key, u.clone());
             u
         }
+        // mapping from index pair to index
+        let mut merged: HashMap<(usize, usize), Node> = HashMap::new();
+        // mapping from node to bool
+        let mut evaluation: HashMap<Node, bool> = HashMap::new();
         let mut applied = BDD {
             graph: aux(
                 &(op, unit),
                 (self.graph.clone(), other.graph.clone()),
-                &(&mut index, &mut node),
+                &Node::build_indexer(&[self.graph.clone(), other.graph.clone()]),
                 &mut evaluation,
                 &mut merged,
             ),
@@ -235,8 +203,6 @@ impl ReducedDecisionDiagram for BDD<Node> {
             }
         }
         let mut links: HashMap<(usize, usize, usize), Node> = HashMap::new();
-        let index: HashMap<Node, usize> = HashMap::new();
-        let node: HashMap<usize, Node> = HashMap::new();
         let mut values: HashMap<Node, bool> = HashMap::new();
         BDD::new_from(compose_aux(
             &v1,
