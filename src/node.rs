@@ -1,6 +1,6 @@
 //! Element type for Decision Diagrams
 use {
-    crate::types::{DecisionDiagram, DecisionDiagramNode},
+    crate::types::{DecisionDiagram, DecisionDiagramNode, Indexer},
     std::{
         collections::{HashMap, HashSet},
         hash::Hash,
@@ -203,6 +203,30 @@ impl DecisionDiagramNode for Node {
             Vertex::Bool(_) => None,
             Vertex::Var { ref high, .. } => Some(high),
         }
+    }
+    fn build_indexer(nodes: &[Self]) -> Indexer<Self> {
+        let mut node: HashMap<usize, Node> = HashMap::new();
+        let mut index: HashMap<Node, usize> = HashMap::new();
+        {
+            let f = Node::new_constant(false);
+            let t = Node::new_constant(true);
+            node.insert(0, f.clone());
+            index.insert(f, 0);
+            node.insert(1, t.clone());
+            index.insert(t, 1);
+        }
+        let mut i: usize = 1;
+        for root in nodes.iter() {
+            for n in root.all_nodes().iter() {
+                i += 1;
+                node.insert(i, (*n).clone());
+                index.insert(
+                    (*n).clone(),
+                    n.is_constant().map_or_else(|| i, |b| b as usize),
+                );
+            }
+        }
+        (index, node)
     }
 }
 

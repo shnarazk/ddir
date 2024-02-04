@@ -34,6 +34,8 @@ pub trait DecisionDiagramNode: Clone + Default + Eq + Hash {
     fn low(&self) -> Option<&Self>;
     /// return the node element for the decision var == true
     fn high(&self) -> Option<&Self>;
+    /// return indexer
+    fn build_indexer(nodes: &[Self]) -> Indexer<Self>;
 }
 
 pub trait ReducedDecisionDiagram {
