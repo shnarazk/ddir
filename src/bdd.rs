@@ -199,24 +199,7 @@ impl ReducedDecisionDiagram for BDD<Node> {
     fn compose(&self, other: &Self, var_index: usize) -> Self {
         let v1 = self.graph.clone();
         let v2 = other.graph.clone();
-        let mut node: HashMap<usize, Node> = HashMap::new();
-        node.insert(0, Node::new_constant(false));
-        node.insert(1, Node::new_constant(true));
-        let mut index: HashMap<Node, usize> = HashMap::new();
-        for (i, n) in self
-            .graph
-            .all_nodes()
-            .iter()
-            .chain(other.graph.all_nodes().iter())
-            .enumerate()
-        {
-            node.insert(i + 2, (*n).clone());
-            if let Some(b) = n.is_constant() {
-                index.insert((*n).clone(), b as usize);
-            } else {
-                index.insert((*n).clone(), i + 2);
-            }
-        }
+        let mut indexer = Node::build_indexer(&[v1.clone(), v2.clone()]);
         let mut links: HashMap<(usize, usize, usize), Node> = HashMap::new();
         let mut values: HashMap<Node, bool> = HashMap::new();
         BDD::new_from(compose_aux(
@@ -224,7 +207,7 @@ impl ReducedDecisionDiagram for BDD<Node> {
             &v1,
             &v2,
             var_index,
-            &mut (index, node),
+            &mut indexer,
             &mut links,
             &mut values,
         ))
