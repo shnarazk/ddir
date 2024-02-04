@@ -50,10 +50,25 @@ impl ReducedDecisionDiagram for BDD<Node> {
         let (mut index, mut node) = Node::build_indexer(&[root.clone()]);
         let mut vlist: HashMap<usize, Vec<&Node>> = HashMap::new();
         // put each vertex u on list vlist[u.var_index]
+        let mut bools = (false, false);
         for n in root.all_nodes().iter().cloned() {
-            if let Some(vi) = n.var_index() {
-                vlist.entry(vi).or_default().push(n);
+            match n.unified_key() {
+                0 => bools.0 |= true,
+                1 => bools.1 |= true,
+                k => vlist.entry(k - 2).or_default().push(n),
             }
+        }
+        match bools {
+            (false, false) => unreachable!(),
+            (false, true) => {
+                self.graph = node[&0].clone();
+                return;
+            }
+            (true, false) => {
+                self.graph = node[&1].clone();
+                return;
+            }
+            (true, true) => (),
         }
         let mut next_id: usize = index.len();
         for vi in vlist.keys().sorted().rev() {
