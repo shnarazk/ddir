@@ -249,33 +249,32 @@ fn compose_aux(
         node[&(val as usize)].clone()
     } else {
         // create nonterminal vertex and evaluate further down
-        let Some(k) = [low.unified_key(), high.unified_key(), other.unified_key()]
+        let Some(vi) = [low.unified_key(), high.unified_key(), other.unified_key()]
             .iter()
             .filter(|n| 1 < **n)
-            .copied()
+            .map(|k| *k - 2)
             .min()
         else {
             panic!();
         };
-        let (vll1, vlh1) = if Some(k) == vlow1.var_index() {
+        let (vll1, vlh1) = if Some(vi) == vlow1.var_index() {
             (vlow1.low().unwrap(), vlow1.high().unwrap())
         } else {
             (vlow1, vlow1)
         };
-        let (vhl1, vhh1) = if Some(k) == vhigh1.var_index() {
+        let (vhl1, vhh1) = if Some(vi) == vhigh1.var_index() {
             (vhigh1.low().unwrap(), vhigh1.high().unwrap())
         } else {
             (vhigh1, vhigh1)
         };
-        let (vl2, vh2) = if Some(k) == other.var_index() {
+        let (vl2, vh2) = if Some(vi) == other.var_index() {
             (other.low().unwrap(), other.high().unwrap())
         } else {
             (other, other)
         };
         let l = compose_aux((vll1, vhl1, vl2), control, index, node, links, values);
         let h = compose_aux((vlh1, vhh1, vh2), control, index, node, links, values);
-        assert!(1 < k);
-        let u = Node::new_var(k - 2, l, h);
+        let u = Node::new_var(vi, l, h);
         links.insert(hash_key, u.clone());
         u
     }
