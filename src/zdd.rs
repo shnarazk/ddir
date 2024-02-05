@@ -40,6 +40,12 @@ impl<N: DecisionDiagram<N> + DecisionDiagramNode> DecisionDiagram<N> for ZDD<N> 
     fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()> {
         self.graph.write_as_gv(sink)
     }
+    fn satisfy_one(&self) -> bool {
+        self.graph.satisfy_one()
+    }
+    fn satisfy_all(&self) -> usize {
+        self.graph.satisfy_all()
+    }
 }
 
 impl ReducedDecisionDiagram for ZDD<Node> {

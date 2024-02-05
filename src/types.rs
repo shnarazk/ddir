@@ -18,6 +18,8 @@ pub trait DecisionDiagram<N: DecisionDiagramNode> {
     }
     // write the graph in graphvis format
     fn write_as_gv(&self, sink: impl io::Write) -> io::Result<()>;
+    fn satisfy_one(&self) -> bool;
+    fn satisfy_all(&self) -> usize;
 }
 
 pub trait DecisionDiagramNode: Clone + Default + Eq + Hash {

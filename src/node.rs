@@ -142,6 +142,28 @@ impl DecisionDiagram<Node> for Node {
         sink.write_all(b"}}\n")?;
         Ok(())
     }
+    fn satisfy_one(&self) -> bool {
+        if let Some(b) = self.is_constant() {
+            return b;
+        }
+        if self.low().unwrap().satisfy_one() {
+            return true;
+        }
+        self.high().unwrap().satisfy_one()
+    }
+    fn satisfy_all(&self) -> usize {
+        fn aux(node: &Node, _i: usize, _x: &mut [usize]) {
+            if let Some(b) = node.is_constant() {
+                if !b {
+                    return;
+                }
+            } else {
+            }
+        }
+        let mut v = vec![0; 10];
+        aux(self, 1, &mut v);
+        v[0]
+    }
 }
 
 impl DecisionDiagramNode for Node {
