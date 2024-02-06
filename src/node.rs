@@ -90,14 +90,26 @@ impl DecisionDiagram<Node> for Node {
   edge [fontname=\"Helvetica,Arial,sans-serif\",color=blue]\n",
         )?;
         let mut index: HashMap<&Node, usize> = HashMap::new();
+        let mut bools = (false, false);
         for (i, n) in self.all_nodes().iter().enumerate() {
-            if let Vertex::Var { .. } = ***n {
-                index.insert(*n, i + 2);
+            index.insert(*n, i + 2);
+            match n.is_constant() {
+                Some(false) => bools.0 |= true,
+                Some(true) => bools.1 |= true,
+                None => (),
             }
         }
         // nodes
-        sink.write_all(b"  0[style=filled,fillcolor=\"gray80\",label=\"false\",shape=\"box\"];\n")?;
-        sink.write_all(b"  1[style=filled,fillcolor=\"gray95\",label=\"true\",shape=\"box\"];\n")?;
+        if bools.0 {
+            sink.write_all(
+                b"  0[style=filled,fillcolor=\"gray80\",label=\"false\",shape=\"box\"];\n",
+            )?;
+        }
+        if bools.1 {
+            sink.write_all(
+                b"  1[style=filled,fillcolor=\"gray95\",label=\"true\",shape=\"box\"];\n",
+            )?;
+        }
         for node in self.all_nodes().iter() {
             if let Vertex::Var { ref var_index, .. } = ***node {
                 let i = if let Some(b) = node.is_constant() {

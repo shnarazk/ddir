@@ -66,11 +66,11 @@ impl ReducedDecisionDiagram for BDD<Node> {
         }
         match bools {
             (false, false) => unreachable!(),
-            (false, true) => {
+            (true, false) => {
                 self.graph = node[&0].clone();
                 return;
             }
-            (true, false) => {
+            (false, true) => {
                 self.graph = node[&1].clone();
                 return;
             }
@@ -304,6 +304,7 @@ mod test {
     #[test]
     fn test_satisfy_one() {
         let f = Node::new_constant(false);
+        assert_eq!(BDD::new_from(f.clone()).satisfy_one(), false);
         let ff: Node = Node::new_var(2, f.clone(), f.clone());
         let bdd: BDD<Node> = BDD::new_from(ff);
         assert_eq!(bdd.satisfy_one(), false);

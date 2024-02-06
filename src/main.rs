@@ -2,7 +2,7 @@ use {
     ddir::{
         bdd::BDD,
         node::{example, Node},
-        types::{DecisionDiagram, ReducedDecisionDiagram},
+        types::{DecisionDiagram, DecisionDiagramNode, ReducedDecisionDiagram},
         zdd::ZDD,
     },
     std::fs::File,
@@ -18,6 +18,8 @@ macro_rules! dump {
 }
 
 fn main() {
+    let f = dump!(Node::new_constant(false), "false-node.gv");
+    dump!(BDD::new_from(f.clone()), "false-bdd.gv");
     let independ: Node = dump!(example::independent_set(), "ind-tree.gv");
     dump!(BDD::new_from(independ.clone()), "ind-bdd.gv");
     dump!(ZDD::new_from(independ), "ind-zdd.gv");
