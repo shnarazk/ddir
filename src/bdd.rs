@@ -301,4 +301,11 @@ mod test {
         let bdd: BDD<Node> = BDD::new_from(n);
         assert_eq!(bdd.len(), 1);
     }
+    #[test]
+    fn test_satisfy_one() {
+        let f = Node::new_constant(false);
+        let ff: Node = Node::new_var(2, f.clone(), f.clone());
+        let bdd: BDD<Node> = BDD::new_from(ff);
+        assert_eq!(bdd.satisfy_one(), false);
+    }
 }
