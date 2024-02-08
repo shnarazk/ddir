@@ -290,7 +290,7 @@ fn compose_aux(
 mod test {
     use crate::{
         bdd::BDD,
-        node::Node,
+        node::{example, Node},
         types::{DecisionDiagram, DecisionDiagramNode},
     };
 
@@ -308,5 +308,7 @@ mod test {
         let ff: Node = Node::new_var(2, f.clone(), f.clone());
         let bdd: BDD<Node> = BDD::new_from(ff);
         assert_eq!(bdd.satisfy_one(), false);
+        let major = BDD::new_from(example::majority());
+        assert_eq!(major.satisfy_one(), true);
     }
 }

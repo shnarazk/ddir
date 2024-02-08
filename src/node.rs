@@ -164,17 +164,21 @@ impl DecisionDiagram<Node> for Node {
         self.high().unwrap().satisfy_one()
     }
     fn satisfy_all(&self) -> usize {
-        fn aux(node: &Node, _i: usize, _x: &mut [usize]) {
-            if let Some(b) = node.is_constant() {
-                if !b {
-                    return;
-                }
-            } else {
+        let mut count: HashMap<&Node, usize> = HashMap::new();
+        fn linear_count<'a>(count: &mut HashMap<&'a Node, usize>, node: &'a Node) -> usize {
+            if let Some(n) = count.get(node) {
+                return *n;
             }
+            if let Some(b) = node.is_constant() {
+                return b as usize;
+            }
+            let a = linear_count(count, node.low().unwrap());
+            let b = linear_count(count, node.high().unwrap());
+            let c = a + b;
+            count.insert(node, c);
+            c
         }
-        let mut v = vec![0; 10];
-        aux(self, 1, &mut v);
-        v[0]
+        linear_count(&mut count, self)
     }
 }
 
@@ -496,5 +500,35 @@ pub mod example {
     }
     pub fn x1x2x4() -> Node {
         D!(1, D!(2, T!(), D!(4, T!(), F!())), D!(2, F!(), T!()))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use {
+        super::*,
+        crate::{
+            // node::{example, Node},
+            types::{DecisionDiagram, DecisionDiagramNode},
+        },
+    };
+
+    #[test]
+    fn test_satisfy() {
+        let f = Node::new_constant(false);
+        assert_eq!(f.satisfy_one(), false);
+        assert_eq!(f.satisfy_all(), 0);
+        let t = Node::new_constant(true);
+        assert_eq!(t.satisfy_one(), true);
+        assert_eq!(t.satisfy_all(), 1);
+        let tt: Node = Node::new_var(2, t.clone(), t.clone());
+        assert_eq!(tt.satisfy_one(), true);
+        assert_eq!(tt.satisfy_all(), 2);
+        let major = example::majority();
+        assert_eq!(major.satisfy_one(), true);
+        assert_eq!(major.satisfy_all(), 3);
+        let ind = example::independent_set();
+        assert_eq!(ind.satisfy_one(), true);
+        assert_eq!(ind.satisfy_all(), 18);
     }
 }
