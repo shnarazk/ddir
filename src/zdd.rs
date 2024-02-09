@@ -116,3 +116,32 @@ impl ReducedDecisionDiagram for ZDD<Node> {
         unimplemented!()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        node::{example, Node},
+        types::{DecisionDiagram, DecisionDiagramNode},
+        zdd::ZDD,
+    };
+
+    #[test]
+    fn test_satisfy_one() {
+        let f = Node::new_constant(false);
+        assert_eq!(ZDD::new_from(f.clone()).satisfy_one(), false);
+        let ff: Node = Node::new_var(2, f.clone(), f.clone());
+        let zdd: ZDD<Node> = ZDD::new_from(ff);
+        assert_eq!(zdd.satisfy_one(), false);
+        let major = ZDD::new_from(example::majority());
+        assert_eq!(major.satisfy_one(), true);
+    }
+    #[test]
+    fn test_satisfy_all() {
+        let major = ZDD::new_from(example::majority());
+        assert_eq!(major.satisfy_one(), true);
+        assert_eq!(major.satisfy_all(), 3);
+        let ind = ZDD::new_from(example::independent_set());
+        assert_eq!(ind.satisfy_one(), true);
+        assert_eq!(ind.satisfy_all(), 18);
+    }
+}
