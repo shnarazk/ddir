@@ -188,18 +188,13 @@ impl ReducedDecisionDiagram for BDD<Node> {
         let mut merged: HashMap<(usize, usize), Node> = HashMap::new();
         // mapping from node to bool
         let mut evaluation: HashMap<Node, bool> = HashMap::new();
-        let mut applied = BDD {
-            graph: aux(
-                &(op, unit),
-                (self.graph.clone(), other.graph.clone()),
-                &Node::build_indexer(&[self.graph.clone(), other.graph.clone()]),
-                &mut evaluation,
-                &mut merged,
-            ),
-            ..Default::default()
-        };
-        applied.reduce();
-        applied
+        BDD::new_from(aux(
+            &(op, unit),
+            (self.graph.clone(), other.graph.clone()),
+            &Node::build_indexer(&[self.graph.clone(), other.graph.clone()]),
+            &mut evaluation,
+            &mut merged,
+        ))
     }
     /// return a new diagram by composing this and other
     fn compose(&self, other: &Self, var_index: usize) -> Self {

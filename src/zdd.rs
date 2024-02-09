@@ -3,7 +3,9 @@
 use {
     crate::{
         node::{Node, Vertex},
-        types::{DecisionDiagram, DecisionDiagramNode, ReducedDecisionDiagram},
+        types::{
+            BooleanOperator, DecisionDiagram, DecisionDiagramNode, Indexer, ReducedDecisionDiagram,
+        },
     },
     itertools::Itertools,
     std::{
@@ -109,8 +111,73 @@ impl ReducedDecisionDiagram for ZDD<Node> {
         // pick up a tree from the hash-table
         self.graph = node[&next_id].clone();
     }
-    fn apply(&self, _op: Box<dyn Fn(bool, bool) -> bool>, _unit: bool, _other: &Self) -> Self {
-        unimplemented!()
+    fn apply(&self, op: Box<dyn Fn(bool, bool) -> bool>, unit: bool, other: &Self) -> ZDD<Node> {
+        fn aux(
+            operator @ (op, unit): &BooleanOperator,
+            (v1, v2): (Node, Node),
+            indexer @ (index, node): &Indexer<Node>,
+            evaluation: &mut HashMap<Node, bool>,
+            merged: &mut HashMap<(usize, usize), Node>,
+        ) -> Node {
+            let hash_key = (index[&v1], index[&v2]);
+            if let Some(n) = merged.get(&hash_key) {
+                return n.clone(); // have already evaluaten
+            }
+            let value1 = evaluation.get(&v1);
+            let value2 = evaluation.get(&v2);
+            let value = match (value1, value2) {
+                (Some(a), _) if *a == *unit => Some(*unit),
+                (_, Some(b)) if *b == *unit => Some(*unit),
+                (None, _) | (_, None) => None,
+                (Some(a), Some(b)) => Some(op(*a, *b)),
+            };
+            if let Some(b) = value {
+                return node[&(b as usize)].clone();
+            }
+            let v1key = v1.unified_key();
+            let v2key = v2.unified_key();
+            let key = match (v1key < 2, v2key < 2) {
+                (false, false) => v1key.min(v2key),
+                (false, true) => v1key,
+                (true, false) => v2key,
+                (true, true) => op(v1key == 1, v2key == 1) as usize,
+            };
+            let u = if key < 2 {
+                Node::new_constant(key == 1)
+            } else {
+                let (vlow1, vhigh1) = if v1key == key {
+                    (v1.low().unwrap().clone(), v1.high().unwrap().clone())
+                } else {
+                    (v1.clone(), v1.clone())
+                };
+                let (vlow2, vhigh2) = if v2key == key {
+                    (v2.low().unwrap().clone(), v2.high().unwrap().clone())
+                } else {
+                    (v2.clone(), v2.clone())
+                };
+                Node::new_var(
+                    key - 2,
+                    aux(operator, (vlow1, vlow2), indexer, evaluation, merged),
+                    aux(operator, (vhigh1, vhigh2), indexer, evaluation, merged),
+                )
+            };
+            if let Some(b) = value {
+                evaluation.insert(u.clone(), b);
+            }
+            merged.insert(hash_key, u.clone());
+            u
+        }
+        // mapping from index pair to index
+        let mut merged: HashMap<(usize, usize), Node> = HashMap::new();
+        // mapping from node to bool
+        let mut evaluation: HashMap<Node, bool> = HashMap::new();
+        ZDD::new_from(aux(
+            &(op, unit),
+            (self.graph.clone(), other.graph.clone()),
+            &Node::build_indexer(&[self.graph.clone(), other.graph.clone()]),
+            &mut evaluation,
+            &mut merged,
+        ))
     }
     fn compose(&self, _other: &Self, _at: usize) -> Self {
         unimplemented!()
