@@ -67,7 +67,7 @@ impl DecisionDiagram<Node> for Node {
     /// let k = Node::new_var(1, n.clone(), f.clone());
     /// assert_eq!(k.all_nodes().len(), 3);
     ///```
-    fn all_nodes<'a>(&'a self) -> HashSet<&Node> {
+    fn all_nodes<'a>(&'a self) -> HashSet<&'a Node> {
         let mut map: HashSet<&'a Node> = HashSet::new();
         fn traverse<'a>(node: &'a Node, map: &mut HashSet<&'a Node>) {
             map.insert(node);
